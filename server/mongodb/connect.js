@@ -1,6 +1,12 @@
 import mongoose from 'mongoose';
+import * as dotenv from 'dotenv';
 
-const clientOptions = {serverApi: {version: '1', strict: true, deprecationErrors: true}};
+dotenv.config();
+
+const clientOptions = {
+  serverApi: {version: '1', strict: true, deprecationErrors: true},
+  dbName: process.env.DB_NAME
+};
 
 const connectDB = async (url) => {
   try {
@@ -9,6 +15,7 @@ const connectDB = async (url) => {
     await mongoose.connection.db.admin().command({ping: 1});
     console.log('Pinged your deployment. You successfully connected to MongoDB!');
   } catch (e) {
+    console.log('Error in connection to MongoDB!');
     // Ensures that the client will close when you finish/error
     await mongoose.disconnect();
   }
