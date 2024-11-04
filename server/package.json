@@ -8,13 +8,12 @@
   "author": "milk-2-dev",
   "license": "MIT",
   "scripts": {
-    "start:server": "dotenv -e .env.development,$ENV_FILE nodemon index.js --ignore '../client/'",
+    "start:server": "dotenv -e $ENV_FILE nodemon index.js --ignore '../client/'",
     "start:client": "npm run serve --prefix '../client/'",
-    "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "dev": "cross-env ENV_FILE=.env.development concurrently \"npm run start:server\" \"npm run start:client\"",
     "prod": "cross-env ENV_FILE=.env.production concurrently \"npm run start:server\" \"npm run start:client\""
   },
   "dependencies": {
-    "body-parser": "^1.20.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
