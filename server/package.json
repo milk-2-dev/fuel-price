@@ -8,9 +8,10 @@
   "author": "milk-2-dev",
   "license": "MIT",
   "scripts": {
-    "start:server": "dotenv -e .env,$ENV_FILE nodemon index.js --ignore '../client/'",
+    "start:server": "dotenv -e .env.development,$ENV_FILE nodemon index.js --ignore '../client/'",
     "start:client": "npm run serve --prefix '../client/'",
-    "local": "cross-env ENV_FILE=.env.local concurrently \"npm run start:server\" \"npm run start:client\""
+    "dev": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "prod": "cross-env ENV_FILE=.env.production concurrently \"npm run start:server\" \"npm run start:client\""
   },
   "dependencies": {
     "body-parser": "^1.20.3",
