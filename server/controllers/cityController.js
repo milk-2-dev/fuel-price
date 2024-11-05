@@ -1,4 +1,4 @@
-import City from '../mongodb/models/cities.js';
+import City from '../mongodb/models/city.js';
 
 export const getAllCities = async (req, res) => {
   try {
