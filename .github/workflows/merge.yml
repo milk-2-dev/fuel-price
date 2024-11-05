@@ -23,7 +23,7 @@ jobs:
       # Крок 3: Додайте цільовий репозиторій як віддалений
       - name: Add target repository
         run: |
-          git remote add target-repo https://$GITHUB_ACTOR:${{ secrets.REPO_ACCESS_TOKEN_2 }}@github.com/milk-2-dev/fuel-price-dev.git
+          git remote add target-repo https://$GITHUB_ACTOR:${{secrets.REPO_ACCESS_TOKEN_3}}@github.com/milk-2-dev/fuel-price-dev.git
           git fetch target-repo
 
       # Крок 4: Перемикання на main гілку цільового репозиторію
