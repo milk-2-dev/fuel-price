@@ -17,8 +17,8 @@ jobs:
       # Крок 2: Налаштуйте Git
       - name: Set up Git
         run: |
-          git config --global user.name "milk-2-dev"
-          git config --global user.email "milk00000000000000@gmail.com"
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "action@github.com"
 
       # Крок 3: Додайте цільовий репозиторій як віддалений
       - name: Add target repository
