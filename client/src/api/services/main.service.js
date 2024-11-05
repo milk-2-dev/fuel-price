@@ -22,6 +22,23 @@ export const getCities = async () => {
   }
 };
 
+export const createFuelStation = async (data) => {
+  try {
+    const response = await fetch(`${apiUrl}/fuel-station`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Ответ сети был не ok.');
+    }
+  } catch (error) {
+    console.log('Возникла проблема с вашим fetch запросом: ', error.message);
+  }
+};
 export const getGasStation = async (id) => {
   try {
     const response = await fetch(`${apiUrl}/gas-station/${id}`);
