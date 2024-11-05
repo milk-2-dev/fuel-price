@@ -35,5 +35,5 @@ jobs:
       # Крок 5: Злиття змін із вихідної гілки
       - name: Merge changes
         run: |
-          git merge origin/dev --strategy-option theirs
+          git merge origin/dev --strategy-option theirs --allow-unrelated-histories
           git push target-repo main --force
