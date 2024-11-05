@@ -8,11 +8,15 @@ on:
 jobs:
   merge_job:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing.
+      contents: read
+      packages: write # for other steps in this workflow
 
     steps:
       # Крок 1: Клонуйте вихідний репозиторій
       - name: Checkout source repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       # Крок 2: Налаштуйте Git
       - name: Set up Git
