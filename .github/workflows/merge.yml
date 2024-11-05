@@ -29,7 +29,8 @@ jobs:
       # Крок 4: Перемикання на main гілку цільового репозиторію
       - name: Checkout main branch of target repository
         run: |
-          git checkout target-repo/main
+          git fetch target-repo main
+          git checkout main
 
       # Крок 5: Злиття змін із вихідної гілки
       - name: Merge changes
