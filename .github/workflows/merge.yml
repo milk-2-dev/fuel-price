@@ -34,5 +34,5 @@ jobs:
       # Крок 5: Злиття змін із вихідної гілки
       - name: Merge changes
         run: |
-          git merge --no-ff origin/dev --allow-unrelated-histories
-          git push target-repo main
+          git merge --no-ff origin/dev
+          git push target-repo/main
