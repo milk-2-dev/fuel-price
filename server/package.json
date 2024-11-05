@@ -8,10 +8,8 @@
   "author": "milk-2-dev",
   "license": "MIT",
   "scripts": {
-    "start:server": "dotenv -e $ENV_FILE nodemon index.js --ignore '../client/'",
-    "start:client": "npm run serve --prefix '../client/'",
-    "dev": "cross-env ENV_FILE=.env.development concurrently \"npm run start:server\" \"npm run start:client\"",
-    "prod": "cross-env ENV_FILE=.env.production concurrently \"npm run start:server\" \"npm run start:client\""
+    "dev": "dotenv -e .env.development nodemon index.js",
+    "prod": "dotenv -e .env.production nodemon index.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
