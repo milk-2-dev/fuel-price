@@ -29,11 +29,11 @@ jobs:
       # Крок 4: Перемикання на main гілку цільового репозиторію
       - name: Checkout main branch of target repository
         run: |
-          git fetch target-repo main
-          git checkout main
+          git fetch target-repo
+          git checkout main || git checkout -b main
 
       # Крок 5: Злиття змін із вихідної гілки
       - name: Merge changes
         run: |
-          git merge origin/dev --strategy-option theirs --allow-unrelated-histories
+          git merge origin/dev --strategy-option theirs
           git push target-repo main --force
