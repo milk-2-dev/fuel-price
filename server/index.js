@@ -4,6 +4,7 @@ import * as dotenv from 'dotenv';
 
 import connectDB from './mongodb/connect.js';
 import routes from './routes/index.js';
+import './cron.js';
 
 dotenv.config();
 
