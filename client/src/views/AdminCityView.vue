@@ -8,21 +8,19 @@
     label-width="auto"
     class="demo-ruleForm"
   >
-    <el-form-item label="Password" prop="pass">
-      <el-input v-model="ruleForm.pass" type="password" autocomplete="off" />
+    <el-form-item label="Name" prop="name">
+      <el-input v-model="ruleForm.name" autocomplete="off"/>
     </el-form-item>
-    <el-form-item label="Confirm" prop="checkPass">
-      <el-input
-        v-model="ruleForm.checkPass"
-        type="password"
-        autocomplete="off"
-      />
+
+    <el-form-item label="Post code" prop="postCode">
+      <el-input v-model="ruleForm.postCode" autocomplete="off"/>
     </el-form-item>
-    <el-form-item label="Age" prop="age">
-      <el-input v-model.number="ruleForm.age" />
-    </el-form-item>
+
     <el-form-item>
-      <el-button type="primary" @click="submitForm(ruleFormRef)">
+      <el-button type="primary"
+                 :loading="pending"
+                 @click="submitForm(ruleFormRef)"
+      >
         Submit
       </el-button>
       <el-button @click="resetForm(ruleFormRef)">Reset</el-button>
@@ -31,73 +29,53 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { reactive, ref, toRaw } from 'vue';
+import { createCity } from '@/api/services/main.service.js';
 
-const ruleFormRef = ref()
 
-const checkAge = (rule, value, callback) => {
-  if (!value) {
-    return callback(new Error('Please input the age'))
-  }
-  setTimeout(() => {
-    if (!Number.isInteger(value)) {
-      callback(new Error('Please input digits'))
-    } else {
-      if (value < 18) {
-        callback(new Error('Age must be greater than 18'))
-      } else {
-        callback()
-      }
-    }
-  }, 1000)
-}
+const ruleFormRef = ref();
+const pending = ref(false);
 
-const validatePass = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('Please input the password'))
+const validateEmpty = (rule, value, callback) => {
+  if (value !== '') {
+    callback();
   } else {
-    if (ruleForm.checkPass !== '') {
-      if (!ruleFormRef.value) return
-      ruleFormRef.value.validateField('checkPass')
-    }
-    callback()
+    callback(new Error('Cant be empty'));
   }
-}
-const validatePass2 = (rule, value, callback) => {
-  if (value === '') {
-    callback(new Error('Please input the password again'))
-  } else if (value !== ruleForm.pass) {
-    callback(new Error("Two inputs don't match!"))
-  } else {
-    callback()
-  }
-}
+};
 
 const ruleForm = reactive({
-  pass: '',
-  checkPass: '',
-  age: '',
-})
+  name: '',
+  postCode: ''
+});
 
 const rules = reactive({
-  pass: [{ validator: validatePass, trigger: 'blur' }],
-  checkPass: [{ validator: validatePass2, trigger: 'blur' }],
-  age: [{ validator: checkAge, trigger: 'blur' }],
-})
+  postCode: [ {validator: validateEmpty, trigger: 'blur'} ],
+  name: [ {validator: validateEmpty, trigger: 'blur'} ]
+});
 
 const submitForm = (formEl) => {
-  if (!formEl) return
-  formEl.validate((valid) => {
+  if (!formEl) return;
+  formEl.validate(async (valid) => {
     if (valid) {
-      console.log('submit!')
+      try {
+        pending.value = true;
+        console.log('submit!', ruleForm);
+        await createCity(toRaw(ruleForm));
+        formEl.resetFields();
+      } catch (e) {
+        console.log(e);
+      } finally {
+        pending.value = false;
+      }
     } else {
-      console.log('error submit!')
+      console.log('error submit!');
     }
-  })
-}
+  });
+};
 
 const resetForm = (formEl) => {
-  if (!formEl) return
-  formEl.resetFields()
-}
+  if (!formEl) return;
+  formEl.resetFields();
+};
 </script>
