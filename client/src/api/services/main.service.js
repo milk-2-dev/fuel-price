@@ -9,10 +9,11 @@ export const getCities = async () => {
 
     const result = await response.json();
 
+    //TODO: @klim, you need to normalize data on server level. Remove '_id' to 'id'
     result.data = result.data.map((item) => {
-      const {name, postCode, _id} = item;
       return {
-        name, postCode, id: _id
+        id: item._id,
+        ...item
       };
     });
 
@@ -71,9 +72,10 @@ export const getGasStation = async (id) => {
   }
 };
 
-export const getGasStationByCity = async (cityId) => {
+export const getFuelStations = async (cityId) => {
   try {
-    const response = await fetch(`${apiUrl}/gas-station?cityId=${cityId}`);
+    const response = await fetch(`${apiUrl}/fuel-station?cityId=${cityId}`);
+
     if (!response.ok) {
       throw new Error('Ответ сети был не ok.');
     }

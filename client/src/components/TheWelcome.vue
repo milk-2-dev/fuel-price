@@ -4,18 +4,34 @@ import { onMounted, ref } from 'vue';
 import 'leaflet/dist/leaflet.css';
 import { LMap, LMarker, LTileLayer, LPopup, LTooltip } from '@vue-leaflet/vue-leaflet';
 
-import { getCities, getGasStationByCity } from '@/api/services/main.service.js';
+import { getCities, getFuelStations } from '@/api/services/main.service.js';
 
 const zoom = ref(10);
 const city = ref(null);
+const defaultMapCenter = [52.520008, 13.404954] //Berlin
+const mapCenter = ref(defaultMapCenter);
 const citiesList = ref(null);
-const gasStationsList = ref(null);
+const fuelStationsList = ref(null);
 
 const isMapHovered = ref(false);
 
+const changeMapCenter = (cityId) => {
+  const city = citiesList.value.find((item) => {
+    return item.id === cityId
+  })
+
+  if(city && city.location){
+    mapCenter.value = [city.location.latitude, city.location.longitude]
+  } else{
+    mapCenter.value = defaultMapCenter
+  }
+}
+
 const handleChangeCity = async (cityId) => {
-  const gasStations = await getGasStationByCity(cityId);
-  gasStationsList.value = gasStations.data;
+  const gasStations = await getFuelStations(cityId);
+  fuelStationsList.value = gasStations.data;
+
+  changeMapCenter(cityId)
 };
 
 onMounted(async () => {
@@ -38,7 +54,7 @@ const handleMouseOutMap = () => {
         <div class="stations-map" style="height:450px;">
           <l-map ref="map"
                  v-model:zoom="zoom"
-                 :center="[52.2192, 7.81417]"
+                 :center="mapCenter"
                  :useGlobalLeaflet="false"
                  @preclick="handleMouseOverMap"
                  @mouseout="handleMouseOutMap"
@@ -50,20 +66,20 @@ const handleMouseOutMap = () => {
             >
             </l-tile-layer>
 
-            <l-marker v-for="station in gasStationsList"
+            <l-marker v-for="station in fuelStationsList"
                       :lat-lng="[station.location.latitude, station.location.longitude]"
                       title="some title"
                       alt="some alt"
                       :riseOnHover="true">
               <l-popup>
-                <h3>{{ station.station }}</h3>
-                <p>
-                  <span>{{ station.open }}</span> - <span>{{ station.close }}</span>
-                </p>
-                <p>Street: {{ station.street }}</p>
+                <h3>{{ station.name }}</h3>
+<!--                <p>-->
+<!--                  <span>{{ station.open }}</span> - <span>{{ station.close }}</span>-->
+<!--                </p>-->
+                <p>Street: {{ station.address }}</p>
 
               </l-popup>
-              <l-tooltip>{{ station.station }}</l-tooltip>
+              <l-tooltip>{{ station.name }}</l-tooltip>
             </l-marker>
           </l-map>
         </div>
@@ -87,48 +103,48 @@ const handleMouseOutMap = () => {
           </div>
 
 
-          <template v-for="station in gasStationsList"
+          <template v-for="station in fuelStationsList"
                     :key="station.stationId">
 
-            <RouterLink :to="/station/+station.stationId">
-              <h3>{{ station.station }}</h3>
+            <RouterLink :to="/station/+station._id">
+              <h3>{{ station.name }}</h3>
             </RouterLink>
 
             <el-row>
               <el-col :span="7">
                 <el-statistic title="e10" :value="station.e10">
-                  <template #suffix>
-                    <el-icon class="green" v-if="station.trend.e10 === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="red" v-if="station.trend.e10 === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
+<!--                  <template #suffix>-->
+<!--                    <el-icon class="green" v-if="station.trend.e10 === 'up'">-->
+<!--                      <CaretTop/>-->
+<!--                    </el-icon>-->
+<!--                    <el-icon class="red" v-if="station.trend.e10 === 'down'">-->
+<!--                      <CaretBottom/>-->
+<!--                    </el-icon>-->
+<!--                  </template>-->
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super">
-                  <template #suffix>
-                    <el-icon class="green" v-if="station.trend.super === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="red" v-if="station.trend.super === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
+<!--                  <template #suffix>-->
+<!--                    <el-icon class="green" v-if="station.trend.super === 'up'">-->
+<!--                      <CaretTop/>-->
+<!--                    </el-icon>-->
+<!--                    <el-icon class="red" v-if="station.trend.super === 'down'">-->
+<!--                      <CaretBottom/>-->
+<!--                    </el-icon>-->
+<!--                  </template>-->
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel">
-                  <template #suffix>
-                    <el-icon class="green" v-if="station.trend.diesel === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="red" v-if="station.trend.diesel === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
+<!--                  <template #suffix>-->
+<!--                    <el-icon class="green" v-if="station.trend.diesel === 'up'">-->
+<!--                      <CaretTop/>-->
+<!--                    </el-icon>-->
+<!--                    <el-icon class="red" v-if="station.trend.diesel === 'down'">-->
+<!--                      <CaretBottom/>-->
+<!--                    </el-icon>-->
+<!--                  </template>-->
                 </el-statistic>
               </el-col>
             </el-row>
