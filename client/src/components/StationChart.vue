@@ -54,19 +54,21 @@ const chartData = computed(() => {
     {
       label: 'E10',
       backgroundColor: 'red',
-      data: typeE10
+      data: typeE10.reverse()
     },
     {
       label: 'SUPER',
       backgroundColor: 'blue',
-      data: typeSuper
+      data: typeSuper.reverse()
     },
     {
       label: 'DIESEL',
       backgroundColor: 'brown',
-      data: typeDiesel
+      data: typeDiesel.reverse()
     }
   ];
+
+  data.labels.reverse();
 
   return data;
 });
