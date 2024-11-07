@@ -106,7 +106,7 @@ const handleMouseOutMap = () => {
 
             <el-row>
               <el-col :span="7">
-                <el-statistic title="e10" :value="station.e10">
+                <el-statistic title="e10" :value="station.e10" :precision="3">
                   <!--                  <template #suffix>-->
                   <!--                    <el-icon class="green" v-if="station.trend.e10 === 'up'">-->
                   <!--                      <CaretTop/>-->
@@ -118,7 +118,7 @@ const handleMouseOutMap = () => {
                 </el-statistic>
               </el-col>
               <el-col :span="7">
-                <el-statistic title="Super" :value="station.super">
+                <el-statistic title="Super" :value="station.super" :precision="3">
                   <!--                  <template #suffix>-->
                   <!--                    <el-icon class="green" v-if="station.trend.super === 'up'">-->
                   <!--                      <CaretTop/>-->
@@ -130,7 +130,7 @@ const handleMouseOutMap = () => {
                 </el-statistic>
               </el-col>
               <el-col :span="7">
-                <el-statistic title="Diesel" :value="station.diesel">
+                <el-statistic title="Diesel" :value="station.diesel" :precision="3">
                   <!--                  <template #suffix>-->
                   <!--                    <el-icon class="green" v-if="station.trend.diesel === 'up'">-->
                   <!--                      <CaretTop/>-->
