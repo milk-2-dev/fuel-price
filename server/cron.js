@@ -5,6 +5,9 @@ import Price from './mongodb/models/price.js';
 
 const tolerance = 0.02; // Дозволена похибка для порівняння з плаваючою точкою
 
+const isEqualZero = (newPrices) => {
+  return newPrices.e10 === 0 && newPrices.super === 0 && newPrices.diesel === 0;
+};
 const isPricesChanged = (currentPrices, newPrices) => {
   const isEqualE10 = currentPrices.e10 === newPrices.e10;
   const isEqualSuper = currentPrices.super === newPrices.super;
@@ -45,13 +48,13 @@ export const fetchAndSavePrice = async () => {
 
       const currentPrices = await Price.findOne(
         {stationInternalId}
-      ).sort({ updatedAt: -1 });
+      ).sort({updatedAt: -1});
 
       console.log('currentPrices - ', currentPrices);
       console.log('newPrices - ', result);
 
 
-      if (isPricesChanged(currentPrices, result)) {
+      if (!isEqualZero && isPricesChanged(currentPrices, result)) {
         return {
           stationInternalId,
           super: result.super,
