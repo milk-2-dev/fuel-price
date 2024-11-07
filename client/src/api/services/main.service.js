@@ -40,9 +40,9 @@ export const createFuelStation = async (data) => {
     console.log('Возникла проблема с вашим fetch запросом: ', error.message);
   }
 };
-export const getGasStation = async (id) => {
+export const getFuelStation = async (id) => {
   try {
-    const response = await fetch(`${apiUrl}/gas-station/${id}`);
+    const response = await fetch(`${apiUrl}/fuel-station/${id}`);
     if (!response.ok) {
       throw new Error('Ответ сети был не ok.');
     }

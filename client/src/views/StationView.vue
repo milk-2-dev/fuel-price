@@ -2,7 +2,7 @@
   <div class="about">
     <el-page-header @back="goBack">
       <template #content>
-        {{stationData?.prices[0].station}}
+        {{stationData?.name}}
       </template>
 
       <el-table :data="stationData?.prices" stripe style="width: 100%">
@@ -24,14 +24,14 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { getGasStation } from '@/api/services/main.service.js';
+import { getFuelStation } from '@/api/services/main.service.js';
 
 const route = useRoute();
 const router = useRouter();
 const stationData = ref(null);
 
 const getStation = async () => {
-  const result = await getGasStation(route.params.id);
+  const result = await getFuelStation(route.params.id);
   stationData.value = result.data;
 };
 
