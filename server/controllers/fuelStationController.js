@@ -76,7 +76,8 @@ export const getFuelStation = async (req, res) => {
           ],
           as: 'prices'
         }
-      }
+      },
+      { $limit: 1 }
     ]);
 
     res.status(200).json({success: true, data: fuelStation});
