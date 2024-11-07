@@ -16,6 +16,24 @@
       <el-input v-model="ruleForm.postCode" autocomplete="off"/>
     </el-form-item>
 
+    <el-row>
+      <el-col>
+        <el-form-item label="Location latitude" prop="latitude">
+          <el-input v-model="ruleForm.location.latitude" autocomplete="off"/>
+        </el-form-item>
+      </el-col>
+      <el-col>
+        <el-form-item label="Location longitude" prop="longitude">
+          <el-input v-model="ruleForm.location.longitude" autocomplete="off"/>
+        </el-form-item>
+      </el-col>
+      <el-col>
+        <el-form-item label="Location plusCode" prop="plusCode">
+          <el-input v-model="ruleForm.location.plusCode" autocomplete="off"/>
+        </el-form-item>
+      </el-col>
+    </el-row>
+
     <el-form-item>
       <el-button type="primary"
                  :loading="pending"
@@ -46,7 +64,12 @@ const validateEmpty = (rule, value, callback) => {
 
 const ruleForm = reactive({
   name: '',
-  postCode: ''
+  postCode: '',
+  location: {
+    longitude: null,
+    latitude: null,
+    plusCode: null
+  }
 });
 
 const rules = reactive({
