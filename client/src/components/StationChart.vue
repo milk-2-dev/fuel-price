@@ -43,7 +43,10 @@ const chartData = computed(() => {
 
   if (props.data) {
     for (let i = 0; i < props.data.length; i++) {
-      data.labels.push(props.data[i].updatedAt);
+      data.labels.push(new Date(props.data[i].updatedAt).toLocaleTimeString(navigator.language, {
+        hour: '2-digit',
+        minute:'2-digit'
+      }));
       typeE10.push(props.data[i].e10);
       typeSuper.push(props.data[i].super);
       typeDiesel.push(props.data[i].diesel);
