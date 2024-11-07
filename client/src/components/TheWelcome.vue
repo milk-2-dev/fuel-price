@@ -1,37 +1,30 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 import 'leaflet/dist/leaflet.css';
 import { LMap, LMarker, LTileLayer, LPopup, LTooltip } from '@vue-leaflet/vue-leaflet';
 
 import { getCities, getFuelStations } from '@/api/services/main.service.js';
 
-const zoom = ref(10);
 const city = ref(null);
-const defaultMapCenter = [52.520008, 13.404954] //Berlin
-const mapCenter = ref(defaultMapCenter);
 const citiesList = ref(null);
 const fuelStationsList = ref(null);
 
+const zoom = ref(10);
+const defaultMapCenter = [ 52.520008, 13.404954 ]; //Berlin
 const isMapHovered = ref(false);
 
-const changeMapCenter = (cityId) => {
-  const city = citiesList.value.find((item) => {
-    return item.id === cityId
-  })
-
-  if(city && city.location){
-    mapCenter.value = [city.location.latitude, city.location.longitude]
-  } else{
-    mapCenter.value = defaultMapCenter
+const mapCenter = computed(() => {
+  if (city.value) {
+    return [ city.value.location.latitude, city.value.location.longitude ];
   }
-}
 
-const handleChangeCity = async (cityId) => {
-  const gasStations = await getFuelStations(cityId);
+  return defaultMapCenter;
+});
+
+const handleChangeCity = async (city) => {
+  const gasStations = await getFuelStations(city.id);
   fuelStationsList.value = gasStations.data;
-
-  changeMapCenter(cityId)
 };
 
 onMounted(async () => {
@@ -73,9 +66,9 @@ const handleMouseOutMap = () => {
                       :riseOnHover="true">
               <l-popup>
                 <h3>{{ station.name }}</h3>
-<!--                <p>-->
-<!--                  <span>{{ station.open }}</span> - <span>{{ station.close }}</span>-->
-<!--                </p>-->
+                <!--                <p>-->
+                <!--                  <span>{{ station.open }}</span> - <span>{{ station.close }}</span>-->
+                <!--                </p>-->
                 <p>Street: {{ station.address }}</p>
 
               </l-popup>
@@ -89,6 +82,7 @@ const handleMouseOutMap = () => {
             <el-select
               class="stations-city-select"
               v-model="city"
+              value-key="id"
               placeholder="Select"
               size="large"
               @change="handleChangeCity"
@@ -97,7 +91,7 @@ const handleMouseOutMap = () => {
                 v-for="item in citiesList"
                 :key="item.id"
                 :label="item.name + ', ' + item.postCode"
-                :value="item.id"
+                :value="item"
               />
             </el-select>
           </div>
@@ -113,38 +107,38 @@ const handleMouseOutMap = () => {
             <el-row>
               <el-col :span="7">
                 <el-statistic title="e10" :value="station.e10">
-<!--                  <template #suffix>-->
-<!--                    <el-icon class="green" v-if="station.trend.e10 === 'up'">-->
-<!--                      <CaretTop/>-->
-<!--                    </el-icon>-->
-<!--                    <el-icon class="red" v-if="station.trend.e10 === 'down'">-->
-<!--                      <CaretBottom/>-->
-<!--                    </el-icon>-->
-<!--                  </template>-->
+                  <!--                  <template #suffix>-->
+                  <!--                    <el-icon class="green" v-if="station.trend.e10 === 'up'">-->
+                  <!--                      <CaretTop/>-->
+                  <!--                    </el-icon>-->
+                  <!--                    <el-icon class="red" v-if="station.trend.e10 === 'down'">-->
+                  <!--                      <CaretBottom/>-->
+                  <!--                    </el-icon>-->
+                  <!--                  </template>-->
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super">
-<!--                  <template #suffix>-->
-<!--                    <el-icon class="green" v-if="station.trend.super === 'up'">-->
-<!--                      <CaretTop/>-->
-<!--                    </el-icon>-->
-<!--                    <el-icon class="red" v-if="station.trend.super === 'down'">-->
-<!--                      <CaretBottom/>-->
-<!--                    </el-icon>-->
-<!--                  </template>-->
+                  <!--                  <template #suffix>-->
+                  <!--                    <el-icon class="green" v-if="station.trend.super === 'up'">-->
+                  <!--                      <CaretTop/>-->
+                  <!--                    </el-icon>-->
+                  <!--                    <el-icon class="red" v-if="station.trend.super === 'down'">-->
+                  <!--                      <CaretBottom/>-->
+                  <!--                    </el-icon>-->
+                  <!--                  </template>-->
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel">
-<!--                  <template #suffix>-->
-<!--                    <el-icon class="green" v-if="station.trend.diesel === 'up'">-->
-<!--                      <CaretTop/>-->
-<!--                    </el-icon>-->
-<!--                    <el-icon class="red" v-if="station.trend.diesel === 'down'">-->
-<!--                      <CaretBottom/>-->
-<!--                    </el-icon>-->
-<!--                  </template>-->
+                  <!--                  <template #suffix>-->
+                  <!--                    <el-icon class="green" v-if="station.trend.diesel === 'up'">-->
+                  <!--                      <CaretTop/>-->
+                  <!--                    </el-icon>-->
+                  <!--                    <el-icon class="red" v-if="station.trend.diesel === 'down'">-->
+                  <!--                      <CaretBottom/>-->
+                  <!--                    </el-icon>-->
+                  <!--                  </template>-->
                 </el-statistic>
               </el-col>
             </el-row>
@@ -176,7 +170,7 @@ const handleMouseOutMap = () => {
   background: #fff;
 }
 
-.select-wrapper{
+.select-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -190,7 +184,7 @@ const handleMouseOutMap = () => {
   z-index: 10000;
 }
 
-.stations-list.list-to-top .stations-city-select{
+.stations-list.list-to-top .stations-city-select {
   top: -100px
 }
 </style>
