@@ -5,6 +5,8 @@
         {{stationData?.name}}
       </template>
 
+      <StationChart :data="stationData?.prices"/>
+
       <el-table :data="stationData?.prices" stripe style="width: 100%">
         <el-table-column prop="updatedAt"
                          label="Date"
@@ -25,6 +27,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getFuelStation } from '@/api/services/main.service.js';
+import StationChart from '@/components/StationChart.vue';
 
 const route = useRoute();
 const router = useRouter();
