@@ -13,6 +13,7 @@
         range-separator="To"
         start-placeholder="Start date"
         end-placeholder="End date"
+        :clearable="false"
         :defaultTime="[dateRange[0], dateRange[1]]"
         :disabled-date="disabledDates"
         @change="handleChangeDateRange"
