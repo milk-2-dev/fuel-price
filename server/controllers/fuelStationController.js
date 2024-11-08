@@ -1,7 +1,7 @@
 import FuelStation from '../mongodb/models/fuelStation.js';
 
 export const getAllFuelStations = async (req, res) => {
-  const {cityId} = req.query;
+  const {cityId, startDay, endDay} = req.query;
 
   try {
     let fuelStations = [];
@@ -16,7 +16,17 @@ export const getAllFuelStations = async (req, res) => {
             from: 'prices',  // Назва колекції з цінами
             let: {stationId: {$toString: '$_id'}}, // Перетворюємо _id у рядок
             pipeline: [
-              {$match: {$expr: {$eq: [ '$stationInternalId', '$$stationId' ]}}},
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      {$eq: ['$stationInternalId', '$$stationId']},
+                      {$gte: ['$updatedAt', startDay]},
+                      {$lte: ['$updatedAt', endDay]}
+                    ]
+                  }
+                }
+              },
               {$sort: {updatedAt: -1}} // Сортуємо за полем updatedAt (найновіші першими)
             ],
             as: 'prices'
@@ -44,7 +54,8 @@ export const getAllFuelStations = async (req, res) => {
             super: {$first: '$prices.super'},
             e10: {$first: '$prices.e10'},
             diesel: {$first: '$prices.diesel'},
-            latestPriceUpdatedAt: {$first: '$prices.updatedAt'}
+            latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
+            trend: {$first: '$prices.trend'}
           }
         }
       ]);
