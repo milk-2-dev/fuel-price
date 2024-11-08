@@ -5,6 +5,18 @@
         {{stationData?.name}}
       </template>
 
+
+      <el-date-picker
+        style="margin: 20px 0"
+        v-model="dateRange"
+        type="daterange"
+        range-separator="To"
+        start-placeholder="Start date"
+        end-placeholder="End date"
+        :defaultTime="[dateRange[0], dateRange[1]]"
+        @change="handleChangeDateRange"
+      />
+
       <StationChart :data="stationData?.prices"/>
 
       <el-table :data="stationData?.prices" stripe style="width: 100%">
@@ -33,13 +45,24 @@ const route = useRoute();
 const router = useRouter();
 const stationData = ref(null);
 
-const getStation = async () => {
-  const result = await getFuelStation(route.params.id);
+const dateRange = ref([new Date(new Date().setHours(0,0)), new Date(Date.now())])
+
+const handleChangeDateRange = (val) => {
+  getStation(val);
+}
+
+const getStation = async (dateRange) => {
+  const queries = {
+    startDay: dateRange[0].toISOString(),
+    endDay: dateRange[1].toISOString(),
+  };
+
+  const result = await getFuelStation(route.params.id, queries);
   stationData.value = result.data;
 };
 
 onMounted(async () => {
-  await getStation();
+  await getStation(dateRange.value);
 });
 
 const goBack = () => {
