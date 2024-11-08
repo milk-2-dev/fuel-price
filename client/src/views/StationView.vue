@@ -14,6 +14,7 @@
         start-placeholder="Start date"
         end-placeholder="End date"
         :defaultTime="[dateRange[0], dateRange[1]]"
+        :disabled-date="disabledDates"
         @change="handleChangeDateRange"
       />
 
@@ -46,6 +47,11 @@ const router = useRouter();
 const stationData = ref(null);
 
 const dateRange = ref([new Date(new Date().setHours(0,0)), new Date(Date.now())])
+
+const disabledDates = (date) => {
+  const today = new Date();
+  return date.getTime() > today;
+};
 
 const handleChangeDateRange = (val) => {
   getStation(val);
