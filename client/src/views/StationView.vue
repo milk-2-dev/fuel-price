@@ -1,5 +1,5 @@
 <template>
-  <div class="about">
+  <div class="station-details">
     <el-page-header @back="goBack">
       <template #content>
         {{stationData?.name}}
@@ -35,6 +35,9 @@
 </template>
 
 <style>
+.station-details{
+  padding: 1rem;
+}
 </style>
 <script setup>
 import { onMounted, ref } from 'vue';
