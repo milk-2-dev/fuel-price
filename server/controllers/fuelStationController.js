@@ -20,9 +20,9 @@ export const getAllFuelStations = async (req, res) => {
                 $match: {
                   $expr: {
                     $and: [
-                      {$eq: ['$stationInternalId', '$$stationId']},
-                      {$gte: ['$updatedAt', startDay]},
-                      {$lte: ['$updatedAt', endDay]}
+                      {$eq: [ '$stationInternalId', '$$stationId' ]},
+                      { $gte: ['$updatedAt', new Date(startDay)] },
+                      { $lte: ['$updatedAt', new Date(endDay)] }
                     ]
                   }
                 }
@@ -71,6 +71,7 @@ export const getAllFuelStations = async (req, res) => {
 
 export const getFuelStation = async (req, res) => {
   const {id} = req.params;
+  const {startDay, endDay} = req.query;
 
   try {
     const fuelStation = await FuelStation.aggregate([
@@ -82,7 +83,17 @@ export const getFuelStation = async (req, res) => {
           from: 'prices',  // Назва колекції з цінами
           let: {stationId: {$toString: '$_id'}}, // Перетворюємо _id у рядок
           pipeline: [
-            {$match: {$expr: {$eq: [ '$stationInternalId', '$$stationId' ]}}},
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {$eq: [ '$stationInternalId', '$$stationId' ]},
+                    { $gte: ['$updatedAt', new Date(startDay)] },
+                    { $lte: ['$updatedAt', new Date(endDay)] }
+                  ]
+                }
+              }
+            },
             {$sort: {updatedAt: -1}} // Сортуємо за полем updatedAt (найновіші першими)
           ],
           as: 'prices'

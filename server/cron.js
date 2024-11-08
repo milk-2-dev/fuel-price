@@ -1,7 +1,10 @@
 import cron from 'node-cron';
+import * as dotenv from 'dotenv';
 
 import FuelStation from './mongodb/models/fuelStation.js';
 import Price from './mongodb/models/price.js';
+
+dotenv.config();
 
 const tolerance = 0.02; // Дозволена похибка для порівняння з плаваючою точкою
 
@@ -76,7 +79,7 @@ async function removeDuplicateRecords() {
     // Знаходимо всі записи, згруповані за унікальними значеннями
     const duplicates = await Price.aggregate([
       // Спочатку сортуємо записи за updatedAt (сучасніші записи будуть першими)
-      { $sort: { updatedAt: 1 } }, // Сортуємо по зростанню, щоб перший і останній були відповідно
+      {$sort: {updatedAt: 1}}, // Сортуємо по зростанню, щоб перший і останній були відповідно
 
       // Використовуємо $project для витягування лише дати (без часу) з updatedAt
       {
@@ -85,7 +88,7 @@ async function removeDuplicateRecords() {
           e10: 1,
           super: 1,
           diesel: 1,
-          updatedAtDate: { $dateToString: { format: "%Y-%m-%d", date: "$updatedAt" } },
+          updatedAtDate: {$dateToString: {format: '%Y-%m-%d', date: '$updatedAt'}},
         }
       },
 
@@ -93,22 +96,22 @@ async function removeDuplicateRecords() {
       {
         $group: {
           _id: {
-            stationInternalId: "$stationInternalId",
-            e10: "$e10",
-            super: "$super",
-            diesel: "$diesel",
-            updatedAtDate: "$updatedAtDate"
+            stationInternalId: '$stationInternalId',
+            e10: '$e10',
+            super: '$super',
+            diesel: '$diesel',
+            updatedAtDate: '$updatedAtDate'
           },
-          recordIds: { $push: "$_id" }, // Збираємо всі ідентифікатори записів у масив
-          count: { $sum: 1 }, // Рахуємо кількість дублікатів
+          recordIds: {$push: '$_id'}, // Збираємо всі ідентифікатори записів у масив
+          count: {$sum: 1}, // Рахуємо кількість дублікатів
         }
       },
 
       // Фільтруємо групи, де є більше одного запису
       {
         $match: {
-          count: { $gt: 2 }, // Більше одного, оскільки залишимо два записи (перший і останній)
-          "_id.updatedAtDate": { $exists: true }
+          count: {$gt: 2}, // Більше одного, оскільки залишимо два записи (перший і останній)
+          '_id.updatedAtDate': {$exists: true}
         }
       }
     ]);
@@ -116,21 +119,23 @@ async function removeDuplicateRecords() {
     // Видалити всі записи, крім першого та останнього для кожної групи
     for (const duplicate of duplicates) {
       // Масив ідентифікаторів, з якого залишаємо лише перший і останній елементи
-      const [firstRecordId, ...middleRecordIds] = duplicate.recordIds;
+      const [ firstRecordId, ...middleRecordIds ] = duplicate.recordIds;
       const lastRecordId = middleRecordIds.pop(); // Забираємо останній запис
 
       // Видаляємо всі записи, крім першого і останнього
       await Price.deleteMany({
-        _id: { $in: middleRecordIds }
+        _id: {$in: middleRecordIds}
       });
 
       console.log('Видалено дублікатів - ', middleRecordIds.length);
     }
 
-    console.log("Duplicate records cleaned up successfully, retaining only the first and last record in each group.");
+    console.log('Duplicate records cleaned up successfully, retaining only the first and last record in each group.');
   } catch (error) {
-    console.error("Error removing duplicate records:", error);
+    console.error('Error removing duplicate records:', error);
   }
 };
 
-cron.schedule('*/10 * * * *', fetchAndSavePrice);
+if (process.env.ENV !== 'local') {
+  cron.schedule('*/10 * * * *', fetchAndSavePrice);
+}

@@ -8,6 +8,7 @@
   "author": "milk-2-dev",
   "license": "MIT",
   "scripts": {
+    "dev:local": "dotenv -e .env.local nodemon index.js",
     "dev": "dotenv -e .env.development nodemon index.js",
     "prod": "dotenv -e .env.production nodemon index.js"
   },
