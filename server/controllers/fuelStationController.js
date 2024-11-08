@@ -21,8 +21,8 @@ export const getAllFuelStations = async (req, res) => {
                   $expr: {
                     $and: [
                       {$eq: [ '$stationInternalId', '$$stationId' ]},
-                      { $gte: ['$updatedAt', new Date(startDay)] },
-                      { $lte: ['$updatedAt', new Date(endDay)] }
+                      ...(startDay ? [{ $gte: ['$updatedAt', new Date(startDay)] }] : []),
+                      ...(endDay ? [{ $lte: ['$updatedAt', new Date(endDay)] }] : [])
                     ]
                   }
                 }
@@ -88,8 +88,8 @@ export const getFuelStation = async (req, res) => {
                 $expr: {
                   $and: [
                     {$eq: [ '$stationInternalId', '$$stationId' ]},
-                    { $gte: ['$updatedAt', new Date(startDay)] },
-                    { $lte: ['$updatedAt', new Date(endDay)] }
+                    ...(startDay ? [{ $gte: ['$updatedAt', new Date(startDay)] }] : []),
+                    ...(endDay ? [{ $lte: ['$updatedAt', new Date(endDay)] }] : [])
                   ]
                 }
               }
