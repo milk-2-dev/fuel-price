@@ -107,38 +107,38 @@ const handleMouseOutMap = () => {
             <el-row>
               <el-col :span="7">
                 <el-statistic title="e10" :value="station.e10" :precision="3">
-                  <!--                  <template #suffix>-->
-                  <!--                    <el-icon class="green" v-if="station.trend.e10 === 'up'">-->
-                  <!--                      <CaretTop/>-->
-                  <!--                    </el-icon>-->
-                  <!--                    <el-icon class="red" v-if="station.trend.e10 === 'down'">-->
-                  <!--                      <CaretBottom/>-->
-                  <!--                    </el-icon>-->
-                  <!--                  </template>-->
+                  <template #suffix>
+                    <el-icon class="red" v-if="station.trend.e10 === 'up'">
+                      <CaretTop/>
+                    </el-icon>
+                    <el-icon class="green" v-if="station.trend.e10 === 'down'">
+                      <CaretBottom/>
+                    </el-icon>
+                  </template>
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super" :precision="3">
-                  <!--                  <template #suffix>-->
-                  <!--                    <el-icon class="green" v-if="station.trend.super === 'up'">-->
-                  <!--                      <CaretTop/>-->
-                  <!--                    </el-icon>-->
-                  <!--                    <el-icon class="red" v-if="station.trend.super === 'down'">-->
-                  <!--                      <CaretBottom/>-->
-                  <!--                    </el-icon>-->
-                  <!--                  </template>-->
+                  <template #suffix>
+                    <el-icon class="red" v-if="station.trend.super === 'up'">
+                      <CaretTop/>
+                    </el-icon>
+                    <el-icon class="green" v-if="station.trend.super === 'down'">
+                      <CaretBottom/>
+                    </el-icon>
+                  </template>
                 </el-statistic>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel" :precision="3">
-                  <!--                  <template #suffix>-->
-                  <!--                    <el-icon class="green" v-if="station.trend.diesel === 'up'">-->
-                  <!--                      <CaretTop/>-->
-                  <!--                    </el-icon>-->
-                  <!--                    <el-icon class="red" v-if="station.trend.diesel === 'down'">-->
-                  <!--                      <CaretBottom/>-->
-                  <!--                    </el-icon>-->
-                  <!--                  </template>-->
+                  <template #suffix>
+                    <el-icon class="red" v-if="station.trend.diesel === 'up'">
+                      <CaretTop/>
+                    </el-icon>
+                    <el-icon class="green" v-if="station.trend.diesel === 'down'">
+                      <CaretBottom/>
+                    </el-icon>
+                  </template>
                 </el-statistic>
               </el-col>
             </el-row>
