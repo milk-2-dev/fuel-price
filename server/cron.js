@@ -50,11 +50,7 @@ export const fetchAndSavePrice = async () => {
         {stationInternalId}
       ).sort({updatedAt: -1});
 
-      console.log('currentPrices - ', currentPrices);
-      console.log('newPrices - ', result);
-
-
-      if (!isEqualZero && isPricesChanged(currentPrices, result)) {
+      if (!isEqualZero(result) && isPricesChanged(currentPrices, result)) {
         return {
           stationInternalId,
           super: result.super,
@@ -71,8 +67,6 @@ export const fetchAndSavePrice = async () => {
         return null;
       }
     }));
-
-    console.log(apiResults);
 
     await Price.insertMany(apiResults.filter((item) => item !== null));
     console.log('Ціни на паливо успішно збережено в лог! ', new Date().toISOString());
