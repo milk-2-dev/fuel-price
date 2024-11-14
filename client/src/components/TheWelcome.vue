@@ -1,22 +1,26 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 
-import 'leaflet/dist/leaflet.css';
-import { LMap, LMarker, LTileLayer, LPopup, LTooltip } from '@vue-leaflet/vue-leaflet';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { getCities, getFuelStations } from '@/api/services/main.service.js';
+
+const mapRef = ref(null);
+const mapContainerRef = ref(null);
 
 const city = ref(null);
 const citiesList = ref(null);
 const fuelStationsList = ref(null);
 
 const zoom = ref(10);
-const defaultMapCenter = [ 52.520008, 13.404954 ]; //Berlin
+const defaultMapCenter = [ 13.41053, 52.52437 ]; //Berlin
 const isMapHovered = ref(false);
+const markers = ref([]);
 
 const mapCenter = computed(() => {
   if (city.value) {
-    return [ city.value.location.latitude, city.value.location.longitude ];
+    return [ city.value.location.longitude, city.value.location.latitude ];
   }
 
   return defaultMapCenter;
@@ -25,59 +29,77 @@ const mapCenter = computed(() => {
 const handleChangeCity = async (city) => {
   const gasStations = await getFuelStations(city.id);
   fuelStationsList.value = gasStations.data;
+
+  mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
+
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].remove();
+  }
+
+  markers.value = fuelStationsList.value.map((item) => {
+    return new mapboxgl.Marker({
+      // element: stationMarker(item),
+      color: '#000'
+    })
+      .setLngLat([ item.location.longitude, item.location.latitude ]);
+  });
+
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].addTo(mapRef.value);
+  }
+};
+
+const stationMarker = (data) => {
+  const markerElement = document.createElement('div');
+  markerElement.className = 'custom-marker';
+  markerElement.style.width = '30px';
+  markerElement.style.height = '30px';
+  markerElement.style.backgroundSize = 'cover';
+
+  markerElement.innerHTML = `<p>${data.name}</p>`;
+
+  return markerElement;
 };
 
 onMounted(async () => {
+  mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
+
+  mapRef.value = new mapboxgl.Map({
+    container: mapContainerRef.value,
+    center: mapCenter.value,
+    zoom: zoom.value
+  });
+
+  // Initialize the geolocate control.
+  const geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+      enableHighAccuracy: true
+    },
+    trackUserLocation: true
+  });
+// Add the control to the map.
+  mapRef.value.addControl(geolocate);
+
+  // mapRef.value.on('load', () => {
+  //   geolocate.trigger();
+  // });
+
   const cities = await getCities();
   citiesList.value = cities.data;
 });
 
-const handleMouseOverMap = () => {
-  isMapHovered.value = true;
-};
-const handleMouseOutMap = () => {
-  isMapHovered.value = false;
-};
+onBeforeUnmount(() => {
+  mapRef.value.remove();
+});
 </script>
 
 <template>
   <el-row :gutter="20">
     <el-col :span="12" :offset="6">
       <el-space direction="vertical" :fill="true" style="width: 100%">
-        <div class="stations-map" style="height:450px;">
-          <l-map ref="map"
-                 v-model:zoom="zoom"
-                 :center="mapCenter"
-                 :useGlobalLeaflet="false"
-                 @preclick="handleMouseOverMap"
-                 @mouseout="handleMouseOutMap"
-          >
-            <l-tile-layer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              layer-type="base"
-              name="OpenStreetMap"
-            >
-            </l-tile-layer>
+        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>
 
-            <l-marker v-for="station in fuelStationsList"
-                      :lat-lng="[station.location.latitude, station.location.longitude]"
-                      title="some title"
-                      alt="some alt"
-                      :riseOnHover="true">
-              <l-popup>
-                <h3>{{ station.name }}</h3>
-                <!--                <p>-->
-                <!--                  <span>{{ station.open }}</span> - <span>{{ station.close }}</span>-->
-                <!--                </p>-->
-                <p>Street: {{ station.address }}</p>
-
-              </l-popup>
-              <l-tooltip>{{ station.name }}</l-tooltip>
-            </l-marker>
-          </l-map>
-        </div>
-
-        <div class="stations-list" :class="isMapHovered ? null : 'list-to-top'">
+        <div class="stations-list">
           <div class="select-wrapper">
             <el-select
               class="stations-city-select"
