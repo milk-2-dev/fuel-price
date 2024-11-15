@@ -1,7 +1,7 @@
 import FuelStation from '../mongodb/models/fuelStation.js';
 
 export const getAllFuelStations = async (req, res) => {
-  const {cityId, startDay, endDay} = req.query;
+  const {cityId, startDay, endDay, nearestTo} = req.query;
 
   try {
     let fuelStations = [];
@@ -21,8 +21,72 @@ export const getAllFuelStations = async (req, res) => {
                   $expr: {
                     $and: [
                       {$eq: [ '$stationInternalId', '$$stationId' ]},
-                      ...(startDay ? [{ $gte: ['$updatedAt', new Date(startDay)] }] : []),
-                      ...(endDay ? [{ $lte: ['$updatedAt', new Date(endDay)] }] : [])
+                      ...(startDay ? [ {$gte: [ '$updatedAt', new Date(startDay) ]} ] : []),
+                      ...(endDay ? [ {$lte: [ '$updatedAt', new Date(endDay) ]} ] : [])
+                    ]
+                  }
+                }
+              },
+              {$sort: {updatedAt: -1}} // Сортуємо за полем updatedAt (найновіші першими)
+            ],
+            as: 'prices'
+          }
+        },
+        {
+          $unwind: {
+            path: '$prices',
+            preserveNullAndEmptyArrays: true  // Залишає станції без цін, якщо вони є
+          }
+        },
+        {
+          $sort: {
+            'prices.updatedAt': -1  // Сортуємо ціни за полем updatedAt у порядку спадання
+          }
+        },
+        {
+          $group: {
+            _id: '$_id',
+            name: {$first: '$name'},
+            address: {$first: '$address'},
+            city: {$first: '$city'},
+            location: {$first: '$location'},
+            stationIdFromApi: {$first: '$stationIdFromApi'},
+            super: {$first: '$prices.super'},
+            e10: {$first: '$prices.e10'},
+            diesel: {$first: '$prices.diesel'},
+            latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
+            trend: {$first: '$prices.trend'}
+          }
+        }
+      ]);
+    } else if (nearestTo) {
+      const coordinates = nearestTo.split(',');
+      const radius = 5; //default value TODO @klim: make this parameter dynamically later
+      const radiusInMeters = radius * 1000; // Перетворення з км у метри
+
+      // Пошук станцій у радіусі з використанням $geoWithin і $centerSphere
+      fuelStations = await FuelStation.aggregate([
+        {
+          $match: {
+            location: {
+              $geoWithin: {
+                $centerSphere: [ [ parseFloat(coordinates[0]), parseFloat(coordinates[1]) ], radiusInMeters / 6378100 ]
+              }
+            }
+          } // Фільтруємо станції за координатами
+        },
+        {
+          $lookup: {
+            from: 'prices',  // Назва колекції з цінами
+            let: {stationId: {$toString: '$_id'}}, // Перетворюємо _id у рядок
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      {$eq: [ '$stationInternalId', '$$stationId' ]},
+                      ...(startDay ? [ {$gte: [ '$updatedAt', new Date(startDay) ]} ] : []),
+                      ...(endDay ? [ {$lte: [ '$updatedAt', new Date(endDay) ]} ] : [])
                     ]
                   }
                 }
@@ -88,8 +152,8 @@ export const getFuelStation = async (req, res) => {
                 $expr: {
                   $and: [
                     {$eq: [ '$stationInternalId', '$$stationId' ]},
-                    ...(startDay ? [{ $gte: ['$updatedAt', new Date(startDay)] }] : []),
-                    ...(endDay ? [{ $lte: ['$updatedAt', new Date(endDay)] }] : [])
+                    ...(startDay ? [ {$gte: [ '$updatedAt', new Date(startDay) ]} ] : []),
+                    ...(endDay ? [ {$lte: [ '$updatedAt', new Date(endDay) ]} ] : [])
                   ]
                 }
               }
@@ -108,6 +172,8 @@ export const getFuelStation = async (req, res) => {
 };
 
 export const createNew = async (req, res) => {
+  console.log(req.body);
+
   try {
     const {
       address,
@@ -117,6 +183,7 @@ export const createNew = async (req, res) => {
       location
     } = req.body;
 
+    location.type = 'Point'; // Значення 'Point' вказує MongoDB, що координати location.coordinates визначають саме точку (на відміну від інших геометричних об'єктів, як-от лінії чи багатокутники).
 
     const newData = await FuelStation.create({
       address,
