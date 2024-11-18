@@ -137,9 +137,10 @@ onMounted(async () => {
     if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
       prevCenter.value = [ center.lng, center.lat ];
 
-      if (geolocationButtonTriggered.value) {
+      if (isNeedToUpdate.value) {
         await getNearestFuelStations([ center.lng, center.lat ]);
         city.value = null;
+        isNeedToUpdate.value = false;
         geolocationButtonTriggered.value = false;
       }
     }
