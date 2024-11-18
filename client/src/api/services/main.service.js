@@ -55,9 +55,9 @@ export const getFuelStation = async (id, queries) => {
   }
 };
 
-export const getFuelStations = async (cityId) => {
+export const getFuelStations = async (queries) => {
   try {
-    const response = await fetch(`${apiUrl}/fuel-station?cityId=${cityId}`);
+    const response = await fetch(`${apiUrl}/fuel-station?${new URLSearchParams(queries).toString()}`);
 
     if (!response.ok) {
       throw new Error('Ответ сети был не ok.');

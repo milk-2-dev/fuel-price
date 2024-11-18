@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const FuelStation = new mongoose.Schema({
   address: {type: String, required: true},
@@ -9,11 +9,17 @@ const FuelStation = new mongoose.Schema({
   },
   stationIdFromApi: {type: String, required: true},
   location: {
-    longitude: {type: Number, required: true},
-    latitude: {type: Number, required: true},
-    plusCode: {type: String}
+    type: {
+      type: String,
+      enum: [ 'Point' ],
+      required: true
+    },
+    coordinates: {
+      type: [ Number ], // [довгота, широта]
+      required: true
+    }
   }
-},{
+}, {
   toJSON: {
     virtuals: true,
     transform: (doc, ret) => {
@@ -21,7 +27,10 @@ const FuelStation = new mongoose.Schema({
       delete ret._id; // Видаляємо поле _id return ret;
     }
   }
-})
+});
+
+// Створюємо геопросторовий індекс для поля location
+FuelStation.index({ location: "2dsphere" });
 
 const FuelStationSchema = mongoose.model('fuel_stations', FuelStation);
 

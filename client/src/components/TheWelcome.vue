@@ -13,10 +13,13 @@ const city = ref(null);
 const citiesList = ref(null);
 const fuelStationsList = ref(null);
 
+const userLocation = ref(null);
 const zoom = ref(10);
 const defaultMapCenter = [ 13.41053, 52.52437 ]; //Berlin
 const isMapHovered = ref(false);
 const markers = ref([]);
+const isNeedToUpdate = ref(true);
+
 
 const mapCenter = computed(() => {
   if (city.value) {
@@ -27,7 +30,7 @@ const mapCenter = computed(() => {
 });
 
 const handleChangeCity = async (city) => {
-  const gasStations = await getFuelStations(city.id);
+  const gasStations = await getFuelStations({cityId: city.id});
   fuelStationsList.value = gasStations.data;
 
   mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
@@ -41,7 +44,27 @@ const handleChangeCity = async (city) => {
       // element: stationMarker(item),
       color: '#000'
     })
-      .setLngLat([ item.location.longitude, item.location.latitude ]);
+      .setLngLat(item.location.coordinates);
+  });
+
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].addTo(mapRef.value);
+  }
+};
+const getNearestFuelStations = async (coordinates) => {
+  const gasStations = await getFuelStations({nearestTo: coordinates});
+  fuelStationsList.value = gasStations.data;
+
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].remove();
+  }
+
+  markers.value = fuelStationsList.value.map((item) => {
+    return new mapboxgl.Marker({
+      // element: stationMarker(item),
+      color: '#000'
+    })
+      .setLngLat(item.location.coordinates);
   });
 
   for (let i = 0; i < markers.value.length; i++) {
@@ -70,19 +93,58 @@ onMounted(async () => {
     zoom: zoom.value
   });
 
-  // Initialize the geolocate control.
-  const geolocate = new mapboxgl.GeolocateControl({
+  /////////////////
+
+  userLocation.value = new mapboxgl.GeolocateControl({
+    fitBoundsOptions: {
+      maxZoom: 9
+    },
     positionOptions: {
       enableHighAccuracy: true
     },
-    trackUserLocation: true
+    trackUserLocation: false,
+    showUserHeading: false
   });
-// Add the control to the map.
-  mapRef.value.addControl(geolocate);
 
-  // mapRef.value.on('load', () => {
-  //   geolocate.trigger();
-  // });
+  mapRef.value.addControl(
+    userLocation.value
+  );
+
+  mapRef.value.on('load', () => {
+    userLocation.value.trigger();
+    geolocationButtonTriggered.value = true;
+    userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+
+    userLocation.value._geolocateButton.addEventListener('click', () => {
+      geolocationButtonTriggered.value = true;
+      isNeedToUpdate.value = true;
+      userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+    });
+  });
+
+  const prevCenter = ref(null);
+  const geolocationButtonTriggered = ref(false);
+
+  mapRef.value.on('movestart', async () => {
+    if (!geolocationButtonTriggered.value) {
+      userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
+    }
+  });
+
+  mapRef.value.on('moveend', async () => {
+    const center = mapRef.value.getCenter(); // Отримуємо центр карти
+
+    if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
+      prevCenter.value = [ center.lng, center.lat ];
+
+      if (isNeedToUpdate.value) {
+        await getNearestFuelStations([ center.lng, center.lat ]);
+        city.value = null;
+        isNeedToUpdate.value = false;
+        geolocationButtonTriggered.value = false;
+      }
+    }
+  });
 
   const cities = await getCities();
   citiesList.value = cities.data;
@@ -129,7 +191,9 @@ onBeforeUnmount(() => {
             <el-row>
               <el-col :span="7">
                 <el-statistic title="e10" :value="station.e10" :precision="3">
-                  <template #suffix>
+                  <template v-if="station.trend"
+                            #suffix
+                  >
                     <el-icon class="red" v-if="station.trend.e10 === 'up'">
                       <CaretTop/>
                     </el-icon>
@@ -141,7 +205,9 @@ onBeforeUnmount(() => {
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super" :precision="3">
-                  <template #suffix>
+                  <template v-if="station.trend"
+                            #suffix
+                  >
                     <el-icon class="red" v-if="station.trend.super === 'up'">
                       <CaretTop/>
                     </el-icon>
@@ -153,7 +219,9 @@ onBeforeUnmount(() => {
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel" :precision="3">
-                  <template #suffix>
+                  <template v-if="station.trend"
+                            #suffix
+                  >
                     <el-icon class="red" v-if="station.trend.diesel === 'up'">
                       <CaretTop/>
                     </el-icon>
