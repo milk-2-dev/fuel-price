@@ -1,17 +1,18 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, toRaw } from 'vue';
 
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-import { getCities, getFuelStations } from '@/api/services/main.service.js';
+import { getCities, getFuelStations, getMiddlePrices } from '@/api/services/main.service.js';
 
 const mapRef = ref(null);
 const mapContainerRef = ref(null);
 
 const city = ref(null);
+const middlePrices = ref(null);
 const citiesList = ref(null);
-const fuelStationsList = ref(null);
+const fuelStationsList = ref([]);
 
 const userLocation = ref(null);
 const zoom = ref(10);
@@ -19,6 +20,8 @@ const defaultMapCenter = [ 13.41053, 52.52437 ]; //Berlin
 const isMapHovered = ref(false);
 const markers = ref([]);
 const isNeedToUpdate = ref(true);
+
+const fuelType = ref('e10');
 
 
 const mapCenter = computed(() => {
@@ -33,23 +36,23 @@ const handleChangeCity = async (city) => {
   const gasStations = await getFuelStations({cityId: city.id});
   fuelStationsList.value = gasStations.data;
 
-  mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
-
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].remove();
-  }
-
-  markers.value = fuelStationsList.value.map((item) => {
-    return new mapboxgl.Marker({
-      // element: stationMarker(item),
-      color: '#000'
-    })
-      .setLngLat(item.location.coordinates);
-  });
-
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].addTo(mapRef.value);
-  }
+  // mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
+  //
+  // for (let i = 0; i < markers.value.length; i++) {
+  //   markers.value[i].remove();
+  // }
+  //
+  // markers.value = fuelStationsList.value.map((item) => {
+  //   return new mapboxgl.Marker({
+  //     // element: stationMarker(item),
+  //     color: '#000'
+  //   })
+  //     .setLngLat(item.location.coordinates);
+  // });
+  //
+  // for (let i = 0; i < markers.value.length; i++) {
+  //   markers.value[i].addTo(mapRef.value);
+  // }
 };
 const getNearestFuelStations = async (coordinates) => {
   const gasStations = await getFuelStations({nearestTo: coordinates});
@@ -84,67 +87,91 @@ const stationMarker = (data) => {
   return markerElement;
 };
 
-onMounted(async () => {
-  mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
+const sortedFuelStations = computed(() => {
+  if (!middlePrices.value) return [];
+  const middlePrice = parseFloat(middlePrices.value[fuelType.value]);
+  fuelStationsList.value.sort((a, b) => a[fuelType.value] - b[fuelType.value]);
 
-  mapRef.value = new mapboxgl.Map({
-    container: mapContainerRef.value,
-    center: mapCenter.value,
-    zoom: zoom.value
+  const withPriceLevel = fuelStationsList.value.map((item) => {
+    const rawObj = toRaw(item);
+    rawObj['priceLevel'] = 'normal';
+
+    if (rawObj[fuelType.value] < middlePrice * 0.97) {
+      rawObj.priceLevel = 'good'; // Ціна на 3% або більше нижча за середню
+    } else if (rawObj[fuelType.value] > middlePrice * 1.02) {
+      rawObj.priceLevel = 'bad'; // Ціна на 3% або більше вища за середню
+    }
+
+    return rawObj;
   });
+
+  return withPriceLevel;
+});
+
+onMounted(async () => {
+  const response = await getMiddlePrices();
+  middlePrices.value = response.data;
+
+  // mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
+  //
+  // mapRef.value = new mapboxgl.Map({
+  //   container: mapContainerRef.value,
+  //   center: mapCenter.value,
+  //   zoom: zoom.value
+  // });
 
   /////////////////
 
-  userLocation.value = new mapboxgl.GeolocateControl({
-    fitBoundsOptions: {
-      maxZoom: 9
-    },
-    positionOptions: {
-      enableHighAccuracy: true
-    },
-    trackUserLocation: false,
-    showUserHeading: false
-  });
+  // userLocation.value = new mapboxgl.GeolocateControl({
+  //   fitBoundsOptions: {
+  //     maxZoom: 9
+  //   },
+  //   positionOptions: {
+  //     enableHighAccuracy: true
+  //   },
+  //   trackUserLocation: false,
+  //   showUserHeading: false
+  // });
+  //
+  // mapRef.value.addControl(
+  //   userLocation.value
+  // );
 
-  mapRef.value.addControl(
-    userLocation.value
-  );
+  // mapRef.value.on('load', () => {
+  //   userLocation.value.trigger();
+  //   geolocationButtonTriggered.value = true;
+  //   userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+  //
+  //   userLocation.value._geolocateButton.addEventListener('click', () => {
+  //     geolocationButtonTriggered.value = true;
+  //     isNeedToUpdate.value = true;
+  //     userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+  //   });
+  // });
 
-  mapRef.value.on('load', () => {
-    userLocation.value.trigger();
-    geolocationButtonTriggered.value = true;
-    userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+  // const prevCenter = ref(null);
+  // const geolocationButtonTriggered = ref(false);
+  //
+  // mapRef.value.on('movestart', async () => {
+  //   if (!geolocationButtonTriggered.value) {
+  //     userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
+  //   }
+  // });
 
-    userLocation.value._geolocateButton.addEventListener('click', () => {
-      geolocationButtonTriggered.value = true;
-      isNeedToUpdate.value = true;
-      userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
-    });
-  });
-
-  const prevCenter = ref(null);
-  const geolocationButtonTriggered = ref(false);
-
-  mapRef.value.on('movestart', async () => {
-    if (!geolocationButtonTriggered.value) {
-      userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
-    }
-  });
-
-  mapRef.value.on('moveend', async () => {
-    const center = mapRef.value.getCenter(); // Отримуємо центр карти
-
-    if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
-      prevCenter.value = [ center.lng, center.lat ];
-
-      if (isNeedToUpdate.value) {
-        await getNearestFuelStations([ center.lng, center.lat ]);
-        city.value = null;
-        isNeedToUpdate.value = false;
-        geolocationButtonTriggered.value = false;
-      }
-    }
-  });
+  // mapRef.value.on('moveend', async () => {
+  //   const center = mapRef.value.getCenter(); // Отримуємо центр карти
+  //
+  //   if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
+  //     prevCenter.value = [ center.lng, center.lat ];
+  //
+  //     if (isNeedToUpdate.value) {
+  //       await getNearestFuelStations([ center.lng, center.lat ]);
+  //       city.value = null;
+  //       isNeedToUpdate.value = false;
+  //       geolocationButtonTriggered.value = false;
+  //     }
+  //   }
+  // });
 
   const cities = await getCities();
   citiesList.value = cities.data;
@@ -159,7 +186,13 @@ onBeforeUnmount(() => {
   <el-row :gutter="20">
     <el-col :span="12" :offset="6">
       <el-space direction="vertical" :fill="true" style="width: 100%">
-        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>
+        <el-radio-group v-model="fuelType" size="small">
+          <el-radio-button label="E10" value="e10"/>
+          <el-radio-button label="Super" value="super"/>
+          <el-radio-button label="Diesel" value="diesel"/>
+        </el-radio-group>
+
+        <!--        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>-->
 
         <div class="stations-list">
           <div class="select-wrapper">
@@ -181,7 +214,7 @@ onBeforeUnmount(() => {
           </div>
 
 
-          <template v-for="station in fuelStationsList"
+          <template v-for="station in sortedFuelStations"
                     :key="station.stationId">
 
             <RouterLink :to="/station/+station._id">
@@ -202,6 +235,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
+                <span v-if="fuelType === 'e10'">{{station.priceLevel}}</span>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super" :precision="3">
@@ -216,6 +250,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
+                <span v-if="fuelType === 'super'">{{station.priceLevel}}</span>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel" :precision="3">
@@ -230,6 +265,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
+                <span v-if="fuelType === 'diesel'">{{station.priceLevel}}</span>
               </el-col>
             </el-row>
 
