@@ -10,6 +10,16 @@ export const getCities = async () => {
   }
 };
 
+export const getMiddlePrices = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/prices?data=nationwide`);
+
+    return await response.json();
+  } catch (error) {
+    console.log('Возникла проблема с вашим fetch запросом: ', error.message);
+  }
+};
+
 export const createCity = async (data) => {
   try {
     await fetch(`${apiUrl}/cities`, {
