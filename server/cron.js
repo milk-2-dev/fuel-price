@@ -54,9 +54,9 @@ export const fetchAndSavePrice = async () => {
           diesel: result.diesel,
           updatedAt: new Date().toISOString(),
           trend: {
-            e10: calcTrend(currentPrices.e10, result.e10),
-            super: calcTrend(currentPrices.super, result.super),
-            diesel: calcTrend(currentPrices.diesel, result.diesel),
+            e10: currentPrices && calcTrend(currentPrices.e10, result.e10),
+            super: currentPrices && calcTrend(currentPrices.super, result.super),
+            diesel: currentPrices && calcTrend(currentPrices.diesel, result.diesel),
           }
         };
       } else {
