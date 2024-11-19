@@ -38,20 +38,7 @@ const handleChangeCity = async (city) => {
 
   mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
 
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].remove();
-  }
-
-  markers.value = fuelStationsList.value.map((item) => {
-    return new mapboxgl.Marker({
-      element: stationMarker(item)
-    })
-      .setLngLat(item.location.coordinates);
-  });
-
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].addTo(mapRef.value);
-  }
+  updateMarkers();
 };
 const getNearestFuelStations = async (coordinates) => {
   const gasStations = await getFuelStations({nearestTo: coordinates});
@@ -128,6 +115,10 @@ const sortedFuelStations = computed(() => {
 
   return withPriceLevel;
 });
+
+const handleChangeFuelType = () => {
+  updateMarkers();
+};
 
 onMounted(async () => {
   const response = await getMiddlePrices();
@@ -225,7 +216,10 @@ onBeforeUnmount(() => {
           </el-select>
         </div>
 
-        <el-radio-group v-model="fuelType" size="small">
+        <el-radio-group v-model="fuelType"
+                        size="small"
+                        @change="handleChangeFuelType"
+        >
           <el-radio-button label="E10" value="e10"/>
           <el-radio-button label="Super" value="super"/>
           <el-radio-button label="Diesel" value="diesel"/>
@@ -319,7 +313,7 @@ onBeforeUnmount(() => {
   margin-bottom: -5px;
 }
 
-.custom-marker .custom-marker_icon svg{
+.custom-marker .custom-marker_icon svg {
   height: 50px;
 }
 
