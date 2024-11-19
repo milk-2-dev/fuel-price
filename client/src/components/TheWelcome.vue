@@ -36,27 +36,7 @@ const handleChangeCity = async (city) => {
   const gasStations = await getFuelStations({cityId: city.id});
   fuelStationsList.value = gasStations.data;
 
-  // mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
-  //
-  // for (let i = 0; i < markers.value.length; i++) {
-  //   markers.value[i].remove();
-  // }
-  //
-  // markers.value = fuelStationsList.value.map((item) => {
-  //   return new mapboxgl.Marker({
-  //     // element: stationMarker(item),
-  //     color: '#000'
-  //   })
-  //     .setLngLat(item.location.coordinates);
-  // });
-  //
-  // for (let i = 0; i < markers.value.length; i++) {
-  //   markers.value[i].addTo(mapRef.value);
-  // }
-};
-const getNearestFuelStations = async (coordinates) => {
-  const gasStations = await getFuelStations({nearestTo: coordinates});
-  fuelStationsList.value = gasStations.data;
+  mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
 
   for (let i = 0; i < markers.value.length; i++) {
     markers.value[i].remove();
@@ -64,7 +44,31 @@ const getNearestFuelStations = async (coordinates) => {
 
   markers.value = fuelStationsList.value.map((item) => {
     return new mapboxgl.Marker({
-      // element: stationMarker(item),
+      element: stationMarker(item),
+      color: '#000'
+    })
+      .setLngLat(item.location.coordinates);
+  });
+
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].addTo(mapRef.value);
+  }
+};
+const getNearestFuelStations = async (coordinates) => {
+  const gasStations = await getFuelStations({nearestTo: coordinates});
+  fuelStationsList.value = gasStations.data;
+
+  updateMarkers();
+};
+
+const updateMarkers = () => {
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].remove();
+  }
+
+  markers.value = sortedFuelStations.value.map((item) => {
+    return new mapboxgl.Marker({
+      element: stationMarker(item),
       color: '#000'
     })
       .setLngLat(item.location.coordinates);
@@ -78,11 +82,12 @@ const getNearestFuelStations = async (coordinates) => {
 const stationMarker = (data) => {
   const markerElement = document.createElement('div');
   markerElement.className = 'custom-marker';
-  markerElement.style.width = '30px';
-  markerElement.style.height = '30px';
-  markerElement.style.backgroundSize = 'cover';
 
-  markerElement.innerHTML = `<p>${data.name}</p>`;
+  markerElement.classList.add(`custom-marker--price-${data.priceLevel}`);
+
+  const price = data[fuelType.value].toString();
+
+  markerElement.innerHTML = `<p>${price.slice(0, price.length - 1)}<sub>${price.slice(-1)}</sub></p>`;
 
   return markerElement;
 };
@@ -112,66 +117,66 @@ onMounted(async () => {
   const response = await getMiddlePrices();
   middlePrices.value = response.data;
 
-  // mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
-  //
-  // mapRef.value = new mapboxgl.Map({
-  //   container: mapContainerRef.value,
-  //   center: mapCenter.value,
-  //   zoom: zoom.value
-  // });
+  mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
+
+  mapRef.value = new mapboxgl.Map({
+    container: mapContainerRef.value,
+    center: mapCenter.value,
+    zoom: zoom.value
+  });
 
   /////////////////
 
-  // userLocation.value = new mapboxgl.GeolocateControl({
-  //   fitBoundsOptions: {
-  //     maxZoom: 9
-  //   },
-  //   positionOptions: {
-  //     enableHighAccuracy: true
-  //   },
-  //   trackUserLocation: false,
-  //   showUserHeading: false
-  // });
-  //
-  // mapRef.value.addControl(
-  //   userLocation.value
-  // );
+  userLocation.value = new mapboxgl.GeolocateControl({
+    fitBoundsOptions: {
+      maxZoom: 9
+    },
+    positionOptions: {
+      enableHighAccuracy: true
+    },
+    trackUserLocation: false,
+    showUserHeading: false
+  });
 
-  // mapRef.value.on('load', () => {
-  //   userLocation.value.trigger();
-  //   geolocationButtonTriggered.value = true;
-  //   userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
-  //
-  //   userLocation.value._geolocateButton.addEventListener('click', () => {
-  //     geolocationButtonTriggered.value = true;
-  //     isNeedToUpdate.value = true;
-  //     userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
-  //   });
-  // });
+  mapRef.value.addControl(
+    userLocation.value
+  );
 
-  // const prevCenter = ref(null);
-  // const geolocationButtonTriggered = ref(false);
-  //
-  // mapRef.value.on('movestart', async () => {
-  //   if (!geolocationButtonTriggered.value) {
-  //     userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
-  //   }
-  // });
+  mapRef.value.on('load', () => {
+    userLocation.value.trigger();
+    geolocationButtonTriggered.value = true;
+    userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
 
-  // mapRef.value.on('moveend', async () => {
-  //   const center = mapRef.value.getCenter(); // Отримуємо центр карти
-  //
-  //   if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
-  //     prevCenter.value = [ center.lng, center.lat ];
-  //
-  //     if (isNeedToUpdate.value) {
-  //       await getNearestFuelStations([ center.lng, center.lat ]);
-  //       city.value = null;
-  //       isNeedToUpdate.value = false;
-  //       geolocationButtonTriggered.value = false;
-  //     }
-  //   }
-  // });
+    userLocation.value._geolocateButton.addEventListener('click', () => {
+      geolocationButtonTriggered.value = true;
+      isNeedToUpdate.value = true;
+      userLocation.value._geolocateButton.parentNode.style.visibility = 'hidden';
+    });
+  });
+
+  const prevCenter = ref(null);
+  const geolocationButtonTriggered = ref(false);
+
+  mapRef.value.on('movestart', async () => {
+    if (!geolocationButtonTriggered.value) {
+      userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
+    }
+  });
+
+  mapRef.value.on('moveend', async () => {
+    const center = mapRef.value.getCenter(); // Отримуємо центр карти
+
+    if (!prevCenter.value || (prevCenter.value[0] !== center.lng || prevCenter.value[1] !== center.lat)) {
+      prevCenter.value = [ center.lng, center.lat ];
+
+      if (isNeedToUpdate.value) {
+        await getNearestFuelStations([ center.lng, center.lat ]);
+        city.value = null;
+        isNeedToUpdate.value = false;
+        geolocationButtonTriggered.value = false;
+      }
+    }
+  });
 
   const cities = await getCities();
   citiesList.value = cities.data;
@@ -186,34 +191,33 @@ onBeforeUnmount(() => {
   <el-row :gutter="20">
     <el-col :span="12" :offset="6">
       <el-space direction="vertical" :fill="true" style="width: 100%">
+        <div class="select-wrapper">
+          <el-select
+            class="stations-city-select"
+            v-model="city"
+            value-key="id"
+            placeholder="Select"
+            size="large"
+            @change="handleChangeCity"
+          >
+            <el-option
+              v-for="item in citiesList"
+              :key="item.id"
+              :label="item.name + ', ' + item.postCode"
+              :value="item"
+            />
+          </el-select>
+        </div>
+
         <el-radio-group v-model="fuelType" size="small">
           <el-radio-button label="E10" value="e10"/>
           <el-radio-button label="Super" value="super"/>
           <el-radio-button label="Diesel" value="diesel"/>
         </el-radio-group>
 
-        <!--        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>-->
+        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>
 
         <div class="stations-list">
-          <div class="select-wrapper">
-            <el-select
-              class="stations-city-select"
-              v-model="city"
-              value-key="id"
-              placeholder="Select"
-              size="large"
-              @change="handleChangeCity"
-            >
-              <el-option
-                v-for="item in citiesList"
-                :key="item.id"
-                :label="item.name + ', ' + item.postCode"
-                :value="item"
-              />
-            </el-select>
-          </div>
-
-
           <template v-for="station in sortedFuelStations"
                     :key="station.stationId">
 
@@ -235,7 +239,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
-                <span v-if="fuelType === 'e10'">{{station.priceLevel}}</span>
+                <span v-if="fuelType === 'e10'">{{ station.priceLevel }}</span>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Super" :value="station.super" :precision="3">
@@ -250,7 +254,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
-                <span v-if="fuelType === 'super'">{{station.priceLevel}}</span>
+                <span v-if="fuelType === 'super'">{{ station.priceLevel }}</span>
               </el-col>
               <el-col :span="7">
                 <el-statistic title="Diesel" :value="station.diesel" :precision="3">
@@ -265,7 +269,7 @@ onBeforeUnmount(() => {
                     </el-icon>
                   </template>
                 </el-statistic>
-                <span v-if="fuelType === 'diesel'">{{station.priceLevel}}</span>
+                <span v-if="fuelType === 'diesel'">{{ station.priceLevel }}</span>
               </el-col>
             </el-row>
 
@@ -279,6 +283,22 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
+.custom-marker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 10px;
+}
+
+.custom-marker.custom-marker--price-normal {
+  background-color: #409eff;
+  color: #fff;
+}
+
 .green {
   color: var(--el-color-success) !important;
 }
