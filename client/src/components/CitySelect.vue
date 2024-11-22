@@ -29,6 +29,10 @@ const emits = defineEmits(['onChange'])
 const city = ref(null);
 const citiesList = ref(null);
 
+const handleChangeCity = (val) => {
+  emits('onChange', val)
+}
+
 onMounted(async () => {
   const cities = await getCities();
   citiesList.value = cities.data;

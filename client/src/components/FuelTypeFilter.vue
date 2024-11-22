@@ -17,25 +17,27 @@
 import { onMounted, ref } from 'vue';
 
 
-const emits = defineEmits(['onChange']);
+const emits = defineEmits([ 'onChange' ]);
 
 const fuelType = ref(null);
 
 const handleChangeFuelType = (val) => {
   localStorage.setItem('fuelTypeFilter', val);
 
-  emits('onChange', val)
+  emits('onChange', val);
 };
 
 onMounted(() => {
   const defaultFuelType = localStorage.getItem('fuelTypeFilter');
 
-  if(defaultFuelType){
-    fuelType.value = defaultFuelType
-  } else{
-    fuelType.value = 'e10'
+  if (defaultFuelType) {
+    fuelType.value = defaultFuelType;
+  } else {
+    fuelType.value = 'e10';
   }
-})
+
+  emits('onChange', fuelType.value);
+});
 </script>
 
 <style lang="scss" scoped>
