@@ -100,7 +100,7 @@ const sortedFuelStations = computed(() => {
   const middlePrice = parseFloat(middlePrices.value[fuelType.value]);
   fuelStationsList.value.sort((a, b) => a[fuelType.value] - b[fuelType.value]);
 
-  const withPriceLevel = fuelStationsList.value.map((item) => {
+  return fuelStationsList.value.map((item) => {
     const rawObj = toRaw(item);
     rawObj['priceLevel'] = 'normal';
 
@@ -112,8 +112,6 @@ const sortedFuelStations = computed(() => {
 
     return rawObj;
   });
-
-  return withPriceLevel;
 });
 
 const handleChangeFuelType = () => {
