@@ -1,11 +1,15 @@
 <script setup>
-import { RouterView } from 'vue-router'
+import { RouterView } from 'vue-router';
 </script>
 
 <template>
-  <RouterView />
+  <div class="app-wrapper">
+    <RouterView/>
+  </div>
 </template>
 
-<style scoped>
-
+<style>
+.app-wrapper {
+  height: 100vh;
+}
 </style>

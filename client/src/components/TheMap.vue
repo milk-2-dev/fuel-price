@@ -1,68 +1,35 @@
+<template>
+  <div ref="mapContainerRef"
+       class="stations-map"
+  />
+</template>
+
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, toRaw } from 'vue';
-
+import { computed, onMounted, ref, watch } from 'vue';
 import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
 
-import { getCities, getFuelStations, getMiddlePrices } from '@/api/services/main.service.js';
+const props = defineProps([ 'city', 'fuelType', 'fuelStations' ]);
+const emits = defineEmits([ 'onMoveEnd' ]);
 
 const mapRef = ref(null);
 const mapContainerRef = ref(null);
-
-const city = ref(null);
-const middlePrices = ref(null);
-const citiesList = ref(null);
-const fuelStationsList = ref([]);
-
-const userLocation = ref(null);
 const zoom = ref(10);
 const defaultMapCenter = [ 13.41053, 52.52437 ]; //Berlin
-const isMapHovered = ref(false);
+
 const markers = ref([]);
+
+const userLocation = ref(null);
 const isNeedToUpdate = ref(true);
-
-const fuelType = ref('e10');
-
+const prevCenter = ref(null);
+const geolocationButtonTriggered = ref(false);
 
 const mapCenter = computed(() => {
-  if (city.value) {
-    return [ city.value.location.longitude, city.value.location.latitude ];
+  if (props.city) {
+    return [ props.city.location.longitude, props.city.location.latitude ];
   }
 
   return defaultMapCenter;
 });
-
-const handleChangeCity = async (city) => {
-  const gasStations = await getFuelStations({cityId: city.id});
-  fuelStationsList.value = gasStations.data;
-
-  mapRef.value.flyTo({center: [ city.location.longitude, city.location.latitude ]});
-
-  updateMarkers();
-};
-const getNearestFuelStations = async (coordinates) => {
-  const gasStations = await getFuelStations({nearestTo: coordinates});
-  fuelStationsList.value = gasStations.data;
-
-  updateMarkers();
-};
-
-const updateMarkers = () => {
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].remove();
-  }
-
-  markers.value = sortedFuelStations.value.map((item) => {
-    return new mapboxgl.Marker({
-      element: stationMarker(item)
-    })
-      .setLngLat(item.location.coordinates);
-  });
-
-  for (let i = 0; i < markers.value.length; i++) {
-    markers.value[i].addTo(mapRef.value);
-  }
-};
 
 const stationMarker = (data) => {
   const icon = `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100" height="128" viewBox="0 0 100 128" fill="none">
@@ -81,7 +48,7 @@ const stationMarker = (data) => {
 
   markerElement.classList.add(`custom-marker--price-${data.priceLevel}`);
 
-  const price = data[fuelType.value].toString();
+  const price = data[props.fuelType ? props.fuelType : 'e10'].toString();
 
   markerElement.innerHTML = `<div class="custom-marker_wrapper">
 <div class="custom-marker_icon">${icon}</div>
@@ -95,34 +62,28 @@ ${price.slice(0, price.length - 1)}
   return markerElement;
 };
 
-const sortedFuelStations = computed(() => {
-  if (!middlePrices.value) return [];
-  const middlePrice = parseFloat(middlePrices.value[fuelType.value]);
-  fuelStationsList.value.sort((a, b) => a[fuelType.value] - b[fuelType.value]);
+const updateMarkers = () => {
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].remove();
+  }
 
-  return fuelStationsList.value.map((item) => {
-    const rawObj = toRaw(item);
-    rawObj['priceLevel'] = 'normal';
-
-    if (rawObj[fuelType.value] < middlePrice * 0.97) {
-      rawObj.priceLevel = 'good'; // Ціна на 3% або більше нижча за середню
-    } else if (rawObj[fuelType.value] > middlePrice * 1.02) {
-      rawObj.priceLevel = 'bad'; // Ціна на 3% або більше вища за середню
-    }
-
-    return rawObj;
+  markers.value = props.fuelStations.map((item) => {
+    return new mapboxgl.Marker({
+      element: stationMarker(item)
+    })
+      .setLngLat(item.location.coordinates);
   });
-});
 
-const handleChangeFuelType = () => {
-
-  updateMarkers();
+  for (let i = 0; i < markers.value.length; i++) {
+    markers.value[i].addTo(mapRef.value);
+  }
 };
 
-onMounted(async () => {
-  const response = await getMiddlePrices();
-  middlePrices.value = response.data;
+watch(() => props.fuelStations, () => {
+  updateMarkers();
+});
 
+onMounted(() => {
   mapboxgl.accessToken = 'pk.eyJ1IjoibWlsay0yLWRldiIsImEiOiJjbTNmdzdjeGkwMDh6MnFzOGsxaDRibGxyIn0.qfDvVCwBAFD1lMbOT4O9Xw';
 
   mapRef.value = new mapboxgl.Map({
@@ -130,8 +91,6 @@ onMounted(async () => {
     center: mapCenter.value,
     zoom: zoom.value
   });
-
-  /////////////////
 
   userLocation.value = new mapboxgl.GeolocateControl({
     fitBoundsOptions: {
@@ -160,9 +119,6 @@ onMounted(async () => {
     });
   });
 
-  const prevCenter = ref(null);
-  const geolocationButtonTriggered = ref(false);
-
   mapRef.value.on('movestart', async () => {
     if (!geolocationButtonTriggered.value) {
       userLocation.value._geolocateButton.parentNode.style.visibility = 'visible';
@@ -176,204 +132,22 @@ onMounted(async () => {
       prevCenter.value = [ center.lng, center.lat ];
 
       if (isNeedToUpdate.value) {
-        await getNearestFuelStations([ center.lng, center.lat ]);
-        city.value = null;
+        emits('onMoveEnd', center);
+
         isNeedToUpdate.value = false;
         geolocationButtonTriggered.value = false;
       }
     }
   });
 
-  const cities = await getCities();
-  citiesList.value = cities.data;
-});
-
-onBeforeUnmount(() => {
-  mapRef.value.remove();
 });
 </script>
 
-<template>
-  <el-row :gutter="20">
-    <el-col :span="12" :offset="6">
-      <el-space direction="vertical" :fill="true" style="width: 100%">
-        <div class="select-wrapper">
-          <el-select
-            class="stations-city-select"
-            v-model="city"
-            value-key="id"
-            placeholder="Select"
-            size="large"
-            @change="handleChangeCity"
-          >
-            <el-option
-              v-for="item in citiesList"
-              :key="item.id"
-              :label="item.name + ', ' + item.postCode"
-              :value="item"
-            />
-          </el-select>
-        </div>
-
-        <el-radio-group v-model="fuelType"
-                        size="small"
-                        @change="handleChangeFuelType"
-        >
-          <el-radio-button label="E10" value="e10"/>
-          <el-radio-button label="Super" value="super"/>
-          <el-radio-button label="Diesel" value="diesel"/>
-        </el-radio-group>
-
-        <div ref="mapContainerRef" class="stations-map" style="height:450px;"/>
-
-        <div class="stations-list">
-          <template v-for="station in sortedFuelStations"
-                    :key="station.stationId">
-
-            <RouterLink :to="/station/+station._id">
-              <h3>{{ station.name }}</h3>
-            </RouterLink>
-
-            <el-row>
-              <el-col :span="7">
-                <el-statistic title="e10" :value="station.e10" :precision="3">
-                  <template v-if="station.trend"
-                            #suffix
-                  >
-                    <el-icon class="red" v-if="station.trend.e10 === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="green" v-if="station.trend.e10 === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
-                </el-statistic>
-                <span v-if="fuelType === 'e10'">{{ station.priceLevel }}</span>
-              </el-col>
-              <el-col :span="7">
-                <el-statistic title="Super" :value="station.super" :precision="3">
-                  <template v-if="station.trend"
-                            #suffix
-                  >
-                    <el-icon class="red" v-if="station.trend.super === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="green" v-if="station.trend.super === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
-                </el-statistic>
-                <span v-if="fuelType === 'super'">{{ station.priceLevel }}</span>
-              </el-col>
-              <el-col :span="7">
-                <el-statistic title="Diesel" :value="station.diesel" :precision="3">
-                  <template v-if="station.trend"
-                            #suffix
-                  >
-                    <el-icon class="red" v-if="station.trend.diesel === 'up'">
-                      <CaretTop/>
-                    </el-icon>
-                    <el-icon class="green" v-if="station.trend.diesel === 'down'">
-                      <CaretBottom/>
-                    </el-icon>
-                  </template>
-                </el-statistic>
-                <span v-if="fuelType === 'diesel'">{{ station.priceLevel }}</span>
-              </el-col>
-            </el-row>
-
-            <el-divider/>
-          </template>
-        </div>
-      </el-space>
-
-    </el-col>
-  </el-row>
-</template>
-
 <style>
-.custom-marker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 40px;
-  height: 40px;
-}
-
-.custom-marker .custom-marker_wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.custom-marker .custom-marker_icon {
-  margin-bottom: -5px;
-}
-
-.custom-marker .custom-marker_icon svg {
-  height: 50px;
-}
-
-.custom-marker .custom-marker_price {
-  display: flex;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  font-size: 14px;
-}
-
-.custom-marker .custom-marker_price-cents {
-  position: relative;
-  top: -6px;
-  font-size: 10px;
-}
-
-.custom-marker.custom-marker--price-normal .custom-marker_price {
-  background-color: #409eff;
-}
-
-.custom-marker.custom-marker--price-bad .custom-marker_price {
-  background-color: #ff4d51;
-}
-
-.custom-marker.custom-marker--price-good .custom-marker_price {
-  background-color: var(--el-color-success);
-}
-
-.green {
-  color: var(--el-color-success) !important;
-}
-
-.red {
-  color: var(--el-color-error) !important;
-}
-
 .stations-map {
-  position: relative;
-}
-
-.stations-list {
-  position: relative;
-  background: #fff;
-}
-
-.select-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stations-city-select.el-select {
-  width: 250px;
-  position: relative;
+  position: absolute;
   top: 0;
-  transition: .3s ease-in-out;
-  z-index: 10000;
-}
-
-.stations-list.list-to-top .stations-city-select {
-  top: -100px
+  bottom: 0;
+  width: 100%;
 }
 </style>
