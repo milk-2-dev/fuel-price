@@ -57,6 +57,16 @@ export const getAllFuelStations = async (req, res) => {
             latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
             trend: {$first: '$prices.trend'}
           }
+        },
+        {
+          $addFields: {
+            id: '$_id' // Додаємо поле id
+          }
+        },
+        {
+          $project: {
+            _id: 0 // Видаляємо поле _id
+          }
         }
       ]);
     } else if (nearestTo) {
@@ -121,13 +131,25 @@ export const getAllFuelStations = async (req, res) => {
             latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
             trend: {$first: '$prices.trend'}
           }
+        },
+        {
+          $addFields: {
+            id: '$_id' // Додаємо поле id
+          }
+        },
+        {
+          $project: {
+            _id: 0 // Видаляємо поле _id
+          }
         }
       ]);
     } else {
       fuelStations = await FuelStation.find();
     }
 
-    res.status(200).json({success: true, data: fuelStations});
+    res.status(200).json({
+      success: true, data: fuelStations
+    });
   } catch (error) {
     res.status(500).json({success: false, message: error});
   }
