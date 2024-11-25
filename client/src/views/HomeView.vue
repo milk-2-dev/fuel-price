@@ -6,12 +6,18 @@
         <FuelTypeFilter @onChange="handleChangeFuelTypeFilter"/>
       </el-header>
       <el-main>
-        <!--    <TheWelcome/>-->
-        <TheMap :city="selectedCity"
+        <TheMap ref="map"
+                :city="selectedCity"
                 :fuelType="selectedFuelType"
                 :fuelStations="sortedFuelStations"
+                :class="selectedStation ? 'station--selected' : null"
                 @onMoveEnd="handleMoveEnd"
+                @onClickMarker="handleClickMarker"
         />
+
+        <StationDetails :stationId="selectedStation"
+                        @onClose="handleCloseDrawer"/>
+
       </el-main>
     </el-container>
   </div>
@@ -22,16 +28,19 @@ import { computed, onMounted, ref, toRaw } from 'vue';
 
 import { getFuelStations, getMiddlePrices } from '@/api/services/main.service.js';
 
-import TheWelcome from '../components/TheWelcome.vue';
 import CitySelect from '@/components/CitySelect.vue';
 import FuelTypeFilter from '@/components/FuelTypeFilter.vue';
 import TheMap from '@/components/TheMap.vue';
+import StationDetails from '@/views/StationDetails.vue';
 
 
 const selectedCity = ref(null);
 const selectedFuelType = ref(null);
+const selectedStation = ref(null);
 const fuelStationsList = ref([]);
 const middlePrices = ref(null);
+
+const map = ref(null);
 
 const sortedFuelStations = computed(() => {
   if (!middlePrices.value) return [];
@@ -51,6 +60,28 @@ const sortedFuelStations = computed(() => {
     return rawObj;
   });
 });
+
+const handleClickMarker = (stationData) => {
+  const {id, location} = stationData;
+  selectedStation.value = id;
+
+  setTimeout(() => {
+    map.value
+      .resizeMap()
+      .flyTo({
+        center: location.coordinates,
+        zoom: 12
+      });
+  }, 100);
+};
+
+const handleCloseDrawer = () => {
+  selectedStation.value = null;
+
+  setTimeout(() => {
+    map.value.resizeMap();
+  }, 100);
+};
 
 const handleChangeCity = async (city) => {
   selectedCity.value = city;
@@ -73,6 +104,8 @@ onMounted(async () => {
   middlePrices.value = response.data;
 
 });
+
+
 </script>
 
 <style>
@@ -88,5 +121,11 @@ onMounted(async () => {
 .common-layout .el-main {
   height: calc(100vh - 70px - 10px);
   position: relative;
+}
+
+.station--selected {
+  top: 0;
+  bottom: auto;
+  height: 30%;
 }
 </style>

@@ -4,10 +4,12 @@ export const getAllFuelStations = async (req, res) => {
   const {cityId, startDay, endDay, nearestTo} = req.query;
 
   try {
-    let fuelStations = [];
+    const response = {
+      success: true, data: []
+    };
 
     if (cityId) {
-      fuelStations = await FuelStation.aggregate([
+      response.data = await FuelStation.aggregate([
         {
           $match: {'city.id': cityId} // Фільтруємо станції за cityId
         },
@@ -57,6 +59,16 @@ export const getAllFuelStations = async (req, res) => {
             latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
             trend: {$first: '$prices.trend'}
           }
+        },
+        {
+          $addFields: {
+            id: '$_id' // Додаємо поле id
+          }
+        },
+        {
+          $project: {
+            _id: 0 // Видаляємо поле _id
+          }
         }
       ]);
     } else if (nearestTo) {
@@ -65,7 +77,7 @@ export const getAllFuelStations = async (req, res) => {
       const radiusInMeters = radius * 1000; // Перетворення з км у метри
 
       // Пошук станцій у радіусі з використанням $geoWithin і $centerSphere
-      fuelStations = await FuelStation.aggregate([
+      response.data = await FuelStation.aggregate([
         {
           $match: {
             location: {
@@ -121,13 +133,23 @@ export const getAllFuelStations = async (req, res) => {
             latestPriceUpdatedAt: {$first: '$prices.updatedAt'},
             trend: {$first: '$prices.trend'}
           }
+        },
+        {
+          $addFields: {
+            id: '$_id' // Додаємо поле id
+          }
+        },
+        {
+          $project: {
+            _id: 0 // Видаляємо поле _id
+          }
         }
       ]);
     } else {
-      fuelStations = await FuelStation.find();
+      response.data = await FuelStation.find();
     }
 
-    res.status(200).json({success: true, data: fuelStations});
+    res.status(200).json(response);
   } catch (error) {
     res.status(500).json({success: false, message: error});
   }

@@ -1,5 +1,9 @@
 <template>
-  <Line :data="chartData" :options="options" width="900" height="500"/>
+  <div class="price-chart">
+    <Line
+      :data="chartData"
+      :options="options"/>
+  </div>
 </template>
 
 <script setup>
@@ -29,7 +33,7 @@ ChartJS.register(
 const props = defineProps([ 'data' ]);
 
 const options = {
-  responsive: false,
+  responsive: true,
   maintainAspectRatio: false
 };
 
@@ -45,7 +49,7 @@ const chartData = computed(() => {
     for (let i = 0; i < props.data.length; i++) {
       data.labels.push(new Date(props.data[i].updatedAt).toLocaleTimeString(navigator.language, {
         hour: '2-digit',
-        minute:'2-digit'
+        minute: '2-digit'
       }));
       typeE10.push(props.data[i].e10);
       typeSuper.push(props.data[i].super);
@@ -78,6 +82,9 @@ const chartData = computed(() => {
 
 </script>
 
-<style lang="scss" scoped>
-
+<style>
+.price-chart {
+  position: relative;
+  height: 400px;
+}
 </style>
