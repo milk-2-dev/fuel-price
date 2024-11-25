@@ -292,55 +292,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style>
-.custom-marker {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 40px;
-  height: 40px;
-}
 
-.custom-marker .custom-marker_wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-}
-
-.custom-marker .custom-marker_icon {
-  margin-bottom: -5px;
-}
-
-.custom-marker .custom-marker_icon svg {
-  height: 50px;
-}
-
-.custom-marker .custom-marker_price {
-  display: flex;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  font-size: 14px;
-}
-
-.custom-marker .custom-marker_price-cents {
-  position: relative;
-  top: -6px;
-  font-size: 10px;
-}
-
-.custom-marker.custom-marker--price-normal .custom-marker_price {
-  background-color: #409eff;
-}
-
-.custom-marker.custom-marker--price-bad .custom-marker_price {
-  background-color: #ff4d51;
-}
-
-.custom-marker.custom-marker--price-good .custom-marker_price {
-  background-color: var(--el-color-success);
-}
 
 .green {
   color: var(--el-color-success) !important;
