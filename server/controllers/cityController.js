@@ -1,4 +1,4 @@
-import City from '../mongodb/models/cities.js';
+import City from '../mongodb/models/city.js';
 
 export const getAllCities = async (req, res) => {
   try {
@@ -12,11 +12,8 @@ export const getAllCities = async (req, res) => {
 
 export const createNewCity = async (req, res) => {
   try {
-    const {name, postCode} = req.body;
-
     const newCity = await City.create({
-      name: name,
-      postCode: postCode
+      ...req.body
     });
 
     res.status(201).json({success: true, data: newCity});

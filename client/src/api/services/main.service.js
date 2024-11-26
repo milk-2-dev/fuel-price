@@ -3,25 +3,36 @@ const apiUrl = import.meta.env.VITE_API_URL;
 export const getCities = async () => {
   try {
     const response = await fetch(`${apiUrl}/cities`);
-    if (!response.ok) {
-      throw new Error('Ответ сети был не ok.');
-    }
 
-    const result = await response.json();
-
-    result.data = result.data.map((item) => {
-      const {name, postCode, _id} = item;
-      return {
-        name, postCode, id: _id
-      };
-    });
-
-    return result;
+    return await response.json();
   } catch (error) {
     console.log('Возникла проблема с вашим fetch запросом: ', error.message);
   }
 };
 
+export const getMiddlePrices = async () => {
+  try {
+    const response = await fetch(`${apiUrl}/prices?data=nationwide`);
+
+    return await response.json();
+  } catch (error) {
+    console.log('Возникла проблема с вашим fetch запросом: ', error.message);
+  }
+};
+
+export const createCity = async (data) => {
+  try {
+    await fetch(`${apiUrl}/cities`, {
+      method: "POST",
+      body: JSON.stringify(data),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.log('Возникла проблема с вашим fetch запросом: ', error.message);
+  }
+};
 export const createFuelStation = async (data) => {
   try {
     const response = await fetch(`${apiUrl}/fuel-station`, {
@@ -39,9 +50,9 @@ export const createFuelStation = async (data) => {
     console.log('Возникла проблема с вашим fetch запросом: ', error.message);
   }
 };
-export const getGasStation = async (id) => {
+export const getFuelStation = async (id, queries) => {
   try {
-    const response = await fetch(`${apiUrl}/gas-station/${id}`);
+    const response = await fetch(`${apiUrl}/fuel-station/${id}?${new URLSearchParams(queries).toString()}`);
     if (!response.ok) {
       throw new Error('Ответ сети был не ok.');
     }
@@ -54,9 +65,10 @@ export const getGasStation = async (id) => {
   }
 };
 
-export const getGasStationByCity = async (cityId) => {
+export const getFuelStations = async (queries) => {
   try {
-    const response = await fetch(`${apiUrl}/gas-station?cityId=${cityId}`);
+    const response = await fetch(`${apiUrl}/fuel-station?${new URLSearchParams(queries).toString()}`);
+
     if (!response.ok) {
       throw new Error('Ответ сети был не ok.');
     }

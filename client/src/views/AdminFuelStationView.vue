@@ -18,6 +18,7 @@
     <el-form-item label="City" prop="city">
       <el-select
         v-model="ruleForm.city"
+        value-key="id"
         placeholder="Select"
         size="large"
       >
@@ -36,13 +37,13 @@
 
     <el-row>
       <el-col>
-        <el-form-item label="Location latitude" prop="latitude">
-          <el-input v-model="ruleForm.location.latitude" autocomplete="off"/>
+        <el-form-item label="Location longitude" prop="longitude">
+          <el-input v-model.number="ruleForm.location.coordinates[0]" autocomplete="off"/>
         </el-form-item>
       </el-col>
       <el-col>
-        <el-form-item label="Location longitude" prop="longitude">
-          <el-input v-model="ruleForm.location.longitude" autocomplete="off"/>
+        <el-form-item label="Location latitude" prop="latitude">
+          <el-input v-model.number="ruleForm.location.coordinates[1]" autocomplete="off"/>
         </el-form-item>
       </el-col>
       <el-col>
@@ -92,9 +93,7 @@ const ruleForm = reactive({
   city: null,
   stationIdFromApi: '',
   location: {
-    latitude: null,
-    longitude: null,
-    plusCode: null
+    coordinates: []
   },
 });
 
@@ -111,7 +110,7 @@ const submitForm = (formEl) => {
     if (valid) {
       try {
         pending.value = true;
-        console.log('submit!', ruleForm);
+
         await createFuelStation(toRaw(ruleForm));
       } catch (e) {
         console.log(e);
